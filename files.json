@@ -9,6 +9,14 @@
     { "name": "Blue Look.cube", "path": "LUTs/Blue Look.cube", "type": "LUT/cube", "size": "115 KB", "updated": "2026-01-27" },
     { "name": "D-Log M to Rec.709 V1.cube", "path": "LUTs/D-Log M to Rec.709 V1.cube", "type": "LUT/cube", "size": "1 MB", "updated": "2026-01-27" },
     { "name": "Last Day.cube", "path": "LUTs/Last Day.cube", "type": "LUT/cube", "size": "554 KB", "updated": "2026-01-27" },
-    { "name": "Purple Sunset.cube", "path": "LUTs/Purple Sunset.cube", "type": "LUT/cube", "size": "935 KB", "updated": "2026-01-27" }
+    { "name": "Purple Sunset.cube", "path": "LUTs/Purple Sunset.cube", "type": "LUT/cube", "size": "935 KB", "updated": "2026-01-27" },
+    { "name": "Arctic Sony.cube", "path": "LUTs/Arctic Sony.cube", "type": "LUT/cube", "size": "1.2 MB", "updated": "2026-01-27" },
+    { "name": "Autumn Sony.cube", "path": "LUTs/Autumn Sony.cube", "type": "LUT/cube", "size": "135 KB", "updated": "2026-01-27" },
+    { "name": "Blizzard Sony.cube", "path": "LUTs/Blizzard Sony.cube", "type": "LUT/cube", "size": "1.2 MB", "updated": "2026-01-27" },
+    { "name": "Christmas Sony.cube", "path": "LUTs/Christmas Sony.cube", "type": "LUT/cube", "size": "780 KB", "updated": "2026-01-27" },
+    { "name": "Dune Sony.cube", "path": "LUTs/Dune Sony.cube", "type": "LUT/cube", "size": "133 KB", "updated": "2026-01-27" },
+    { "name": "Halloween -0 Sony.cube", "path": "LUTs/Halloween -0 Sony.cube", "type": "LUT/cube", "size": "978 KB", "updated": "2026-01-27" },
+    { "name": "Halloween -2 Sony.cube", "path": "LUTs/Halloween -2 Sony.cube", "type": "LUT/cube", "size": "985 KB", "updated": "2026-01-27" },
+    { "name": "Winterfell Sony.cube", "path": "LUTs/Winterfell Sony.cube", "type": "LUT/cube", "size": "1.2 MB", "updated": "2026-01-27" }
   ]
 }
