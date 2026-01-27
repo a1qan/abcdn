@@ -20,6 +20,6 @@
     { "name": "DJI Footage", "path": "DJI Footage/", "kind": "folder" },
     
     { "name": "25.01.26", "path": "DJI Footage/25.01.26/", "kind": "folder" },
-    { "name": "202601251324_1.MP4", "path": "25.01.26/202601251324_1.MP4", "type": "Video/mp4", "size": "118.4 MB", "updated": "2026-01-27", "mega": "https://transfer.it/t/irT9FaglwbKB"}
+    { "name": "202601251324_1.MP4", "path": "DJI Footage/25.01.26/202601251324_1.MP4", "type": "Video/mp4", "size": "118.4 MB", "updated": "2026-01-27", "mega": "https://transfer.it/t/irT9FaglwbKB"}
   ]
 }
