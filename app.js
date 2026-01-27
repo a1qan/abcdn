@@ -1,6 +1,6 @@
 const LOGIN_KEY = "cdn_authed";
-const LINKS_KEY = "cdn_links";     // { slug: url }
-const FILE_SLUG_KEY = "cdn_file_slugs"; // { filePathOrName: slug }
+const LINKS_KEY = "cdn_links";
+const FILE_SLUG_KEY = "cdn_file_slugs";
 
 const DEFAULT_EMAIL = "user@abcdn.vercel.app";
 const DEFAULT_PASS = "Aidan123";
