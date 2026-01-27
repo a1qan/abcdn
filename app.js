@@ -11,7 +11,7 @@ const loginMsg = $("loginMsg");
 const logoutBtn = $("logoutBtn");
 const refreshBtn = $("refreshBtn");
 const tbody = $("tbody");
-const cards = $("cards");              // NEW
+const cards = $("cards");
 const search = $("search");
 const count = $("count");
 const toast = $("toast");
@@ -23,7 +23,7 @@ const currentFolderPill = $("currentFolderPill");
 let allItems = [];
 let currentFolder = "";
 
-// Icons ONLY for item names
+// Icons only for item names
 const ICONS = {
   file: `
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -68,6 +68,7 @@ function normalizeFolderPath(p) {
 function isFolderItem(item) {
   return item.kind === "folder" || /\/$/.test(cleanPath(item.path));
 }
+
 function displayCdnPath(path) {
   return `/cdn/${cleanPath(path)}`;
 }
@@ -88,7 +89,11 @@ function downloadPageFor(file) {
   );
 }
 
-// Folder stats
+function hasMegaLink(file) {
+  return typeof file.mega === "string" && file.mega.trim().length > 0;
+}
+
+// Folder stats (sum file sizes / latest updated) — includes MEGA files too (uses size/updated fields)
 function parseSizeToBytes(sizeStr) {
   if (!sizeStr) return 0;
   const s = String(sizeStr).trim().toUpperCase();
@@ -205,11 +210,50 @@ function renderViews() {
   loginView.classList.toggle("hidden", authed);
   dashView.classList.toggle("hidden", !authed);
   logoutBtn.classList.toggle("hidden", !authed);
-
   if (authed) {
     updateFolderPill();
     loadItems();
   }
+}
+
+// Render action buttons (files): either MEGA-only or normal 3 buttons
+function renderFileActions(container, file) {
+  container.innerHTML = "";
+
+  if (hasMegaLink(file)) {
+    const btn = document.createElement("button");
+    btn.className = "btn";
+    btn.type = "button";
+    btn.textContent = "Open in MEGA";
+    btn.onclick = () => window.open(file.mega.trim(), "_blank", "noopener,noreferrer");
+    container.appendChild(btn);
+    return;
+  }
+
+  const cdn = cdnUrlFor(file.path);
+  const dl = downloadPageFor(file);
+
+  const b1 = document.createElement("button");
+  b1.className = "btn ghost";
+  b1.type = "button";
+  b1.textContent = "Copy CDN URL";
+  b1.onclick = () => copy(cdn);
+
+  const b2 = document.createElement("button");
+  b2.className = "btn ghost";
+  b2.type = "button";
+  b2.textContent = "Open";
+  b2.onclick = () => window.open(cdn, "_blank", "noopener,noreferrer");
+
+  const b3 = document.createElement("button");
+  b3.className = "btn";
+  b3.type = "button";
+  b3.textContent = "Download";
+  b3.onclick = () => window.open(dl, "_blank", "noopener,noreferrer");
+
+  container.appendChild(b1);
+  container.appendChild(b2);
+  container.appendChild(b3);
 }
 
 function renderList() {
@@ -237,19 +281,14 @@ function renderList() {
   files.sort(sortName);
   folders.sort(sortName);
 
-  // Clear both outputs
   tbody.innerHTML = "";
   cards.innerHTML = "";
-
-  // Toggle containers
   cards.classList.toggle("hidden", !isMobile);
 
+  // ---------- Mobile cards ----------
   if (isMobile) {
-    // Render files as cards
     for (const f of files) {
-      const cdn = cdnUrlFor(f.path);
-      const dl = downloadPageFor(f);
-      const displayPath = displayCdnPath(f.path);
+      const displayPath = hasMegaLink(f) ? `MEGA • /${cleanPath(f.path)}` : displayCdnPath(f.path);
 
       const card = document.createElement("div");
       card.className = "fileCard";
@@ -266,28 +305,20 @@ function renderList() {
           <span class="pill">Updated: ${f.updated || "—"}</span>
         </div>
 
-        <div class="actions">
-          <button class="btn ghost" type="button">Copy CDN URL</button>
-          <button class="btn ghost" type="button">Open</button>
-          <button class="btn" type="button">Download</button>
-        </div>
+        <div class="actions"></div>
       `;
 
-      const btns = card.querySelectorAll("button");
-      btns[0].onclick = () => copy(cdn);
-      btns[1].onclick = () => window.open(cdn, "_blank", "noopener,noreferrer");
-      btns[2].onclick = () => window.open(dl, "_blank", "noopener,noreferrer");
+      const actions = card.querySelector(".actions");
+      renderFileActions(actions, f);
 
       cards.appendChild(card);
     }
 
-    // Render folders at bottom
     for (const f of folders) {
       const folderPath = normalizeFolderPath(f.path);
       const stat = folderStats[folderPath] || { bytes: 0, latest: 0 };
       const sizeNice = bytesToNice(stat.bytes || 0);
       const updatedNice = formatUpdated(stat.latest || 0);
-
       const folderName = f.name || folderPath.replace(/\/$/, "").split("/").pop() || "folder";
 
       const card = document.createElement("div");
@@ -309,7 +340,6 @@ function renderList() {
           <button class="btn" type="button">Open folder</button>
         </div>
       `;
-
       card.querySelector("button").onclick = () => openFolder(folderPath);
       cards.appendChild(card);
     }
@@ -318,11 +348,9 @@ function renderList() {
     return;
   }
 
-  // Desktop table rendering
+  // ---------- Desktop table ----------
   for (const f of files) {
-    const cdn = cdnUrlFor(f.path);
-    const dl = downloadPageFor(f);
-    const displayPath = displayCdnPath(f.path);
+    const displayPath = hasMegaLink(f) ? `MEGA • /${cleanPath(f.path)}` : displayCdnPath(f.path);
 
     const tr = document.createElement("tr");
     tr.innerHTML = `
@@ -336,19 +364,11 @@ function renderList() {
       <td>${f.type || "—"}</td>
       <td>${f.size || "—"}</td>
       <td>${f.updated || "—"}</td>
-      <td>
-        <div class="actions">
-          <button class="btn ghost" type="button">Copy CDN URL</button>
-          <button class="btn ghost" type="button">Open</button>
-          <button class="btn" type="button">Download</button>
-        </div>
-      </td>
+      <td><div class="actions"></div></td>
     `;
 
-    const btns = tr.querySelectorAll("button");
-    btns[0].onclick = () => copy(cdn);
-    btns[1].onclick = () => window.open(cdn, "_blank", "noopener,noreferrer");
-    btns[2].onclick = () => window.open(dl, "_blank", "noopener,noreferrer");
+    const actions = tr.querySelector(".actions");
+    renderFileActions(actions, f);
 
     tbody.appendChild(tr);
   }
@@ -358,7 +378,6 @@ function renderList() {
     const stat = folderStats[folderPath] || { bytes: 0, latest: 0 };
     const sizeNice = bytesToNice(stat.bytes || 0);
     const updatedNice = formatUpdated(stat.latest || 0);
-
     const folderName = f.name || folderPath.replace(/\/$/, "").split("/").pop() || "folder";
 
     const tr = document.createElement("tr");
@@ -402,7 +421,6 @@ search.addEventListener("input", renderList);
 kindFilter.addEventListener("change", renderList);
 upFolderBtn.addEventListener("click", () => { goUpFolder(); showToast("Moved up a folder."); });
 
-// Re-render on resize/orientation changes
 window.addEventListener("resize", renderList);
 window.addEventListener("orientationchange", renderList);
 
