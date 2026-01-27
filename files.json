@@ -2,7 +2,7 @@
   "files": [
     {
       "name": "test.jpg",
-      "path": "assets/test.jpg",
+      "path": "/test.jpg",
       "type": "image/jpg",
       "size": "115 KB",
       "updated": "2026-01-20"
