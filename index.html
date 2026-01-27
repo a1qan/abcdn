@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>ABCDN</title>
   <link rel="stylesheet" href="./style.css" />
-  <link rel="shortcut icon" href="/favi.ico" type="image/x-icon">
+  <link rel="shortcut icon" href="favi.ico" type="image/x-icon">
 </head>
 <body>
   <main class="container">
@@ -46,9 +46,19 @@
       </div>
 
       <div class="row" style="margin-top:14px;">
-        <input id="baseUrl" class="input" placeholder="Base URL (optional) e.g. https://yourdomain.com/assets/" />
-        <input id="search" class="input" placeholder="Search files..." />
-      </div>
+  <select id="kindFilter" class="input" style="max-width:220px; flex:0 0 auto;">
+    <option value="all">All</option>
+    <option value="files">Files only</option>
+    <option value="folders">Folders only</option>
+  </select>
+
+  <input id="search" class="input" placeholder="Search files & folders..." />
+
+  <button id="upFolderBtn" class="btn ghost" type="button">Up</button>
+
+  <span class="pill" id="currentFolderPill">Folder: /</span>
+</div>
+
 
       <div id="toast" class="toast hidden"></div>
 
