@@ -1,197 +1,257 @@
-:root{
-  --bg:#fff;
-  --fg:#000;
-  --muted:rgba(0,0,0,.65);
-  --border:rgba(0,0,0,.18);
+:root {
+  --bg: #ffffff;
+  --fg: #000000;
+  --muted: rgba(0,0,0,.65);
+  --border: rgba(0,0,0,.18);
   --shadow: 0 12px 40px rgba(0,0,0,.06);
-  --radius:16px;
+  --radius: 16px;
 }
 
-*{box-sizing:border-box}
-html,body{height:100%}
-body{
-  margin:0;
-  background:var(--bg);
-  color:var(--fg);
-  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+* { box-sizing: border-box }
+
+html, body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
   -webkit-tap-highlight-color: transparent;
 }
 
-.container{max-width:1000px;margin:0 auto;padding:24px}
+/* ================= Layout ================= */
 
-.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
-.brand{display:flex;align-items:center;gap:10px}
-.brand h1{margin:0;font-size:18px;letter-spacing:-.02em}
-
-.dot{
-  width:10px;height:10px;border-radius:999px;background:var(--fg);
-  animation: pop .5s ease-out both;
-}
-@keyframes pop{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
-
-.card{
-  border:1px solid var(--border);
-  border-radius:var(--radius);
-  padding:18px;
-  box-shadow:var(--shadow);
-  transform: translateY(6px);
-  opacity:0;
-  animation: enter .35s ease-out forwards;
-}
-@keyframes enter{to{transform:translateY(0);opacity:1}}
-
-h2{margin:0 0 8px;font-size:16px;letter-spacing:-.02em}
-
-.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-.space{justify-content:space-between}
-
-.input{
-  flex:1;
-  min-width:220px;
-  padding:11px 12px;
-  border:1px solid var(--border);
-  border-radius:14px;
-  outline:none;
-  background:#fff;
-  color:#000;
-  transition: border-color .15s ease, transform .12s ease;
-}
-.input:focus{border-color:rgba(0,0,0,.35)}
-.input:active{transform:scale(.99)}
-
-.btn{
-  padding:11px 14px;
-  border-radius:14px;
-  border:1px solid var(--fg);
-  background:var(--fg);
-  color:#fff;
-  cursor:pointer;
-  font-weight:700;
-  transition: transform .12s ease, opacity .12s ease, background .12s ease, color .12s ease, border-color .12s ease;
-}
-.btn:hover{opacity:.92}
-.btn:active{transform:scale(.98)}
-
-.btn.ghost{
-  background:#fff;
-  color:#000;
-  border:1px solid var(--border);
-}
-.btn.ghost:hover{border-color:rgba(0,0,0,.35)}
-
-.pill{
-  display:inline-flex;
-  align-items:center;
-  gap:6px;
-  border:1px solid var(--border);
-  border-radius:999px;
-  padding:4px 10px;
-  font-size:12px;
+.container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 24px;
 }
 
-.muted{color:var(--muted);font-size:13px}
-.msg{margin:10px 0 0;font-size:13px;color:var(--muted)}
-.hidden{display:none !important}
-
-/* ===== Icons ===== */
-.ico{
-  width:18px;height:18px;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  flex:0 0 auto;
-}
-.ico svg{width:18px;height:18px;display:block}
-
-/* ===== Truncation (prevents cards resizing due to long text) ===== */
-.truncate{
-  overflow:hidden;
-  white-space:nowrap;
-  text-overflow:ellipsis;
-}
-.fileName{
-  font-weight:800;
-  display:flex;
-  align-items:center;
-  gap:8px;
-  min-width:0;        /* important so ellipsis works in flex */
-}
-.fileNameText{
-  min-width:0;
-  max-width:100%;
-}
-.filePath{
-  font-size:12px;
-  color:var(--muted);
-  margin-top:4px;
-  max-width:100%;
+.row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
 }
 
-/* Desktop table */
-.tableWrap{margin-top:14px;overflow:auto;border-radius:14px;border:1px solid var(--border)}
-.table{width:100%;border-collapse:collapse;min-width:760px;background:#fff}
-.table th,.table td{padding:12px 10px;text-align:left;vertical-align:top}
-.table thead th{
-  font-size:12px;color:var(--muted);
-  border-bottom:1px solid var(--border);
-  position:sticky;top:0;background:#fff;
+.space {
+  justify-content: space-between;
 }
-.table tbody tr{border-top:1px solid var(--border);animation: rowIn .28s ease-out both}
-@keyframes rowIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 
-/* keep first column from blowing up width */
-.table td:first-child{max-width:420px}
-.table td:first-child .truncate{max-width:420px}
-
-/* Actions */
-.actions{display:flex;gap:8px;flex-wrap:wrap}
-.actions .btn{padding:8px 10px;border-radius:12px;font-size:13px}
-
-/* Toast */
-.toast{
-  margin-top:12px;border:1px solid var(--border);border-radius:14px;padding:10px 12px;
-  font-size:13px;transform: translateY(8px);opacity:0;animation: toastIn .22s ease-out forwards;
+.hidden {
+  display: none !important;
 }
-@keyframes toastIn{to{transform:translateY(0);opacity:1}}
 
-.footer{margin-top:16px;padding:10px 2px}
+/* ================= Inputs & Buttons ================= */
 
-/* ===== Mobile: cards ===== */
+.input {
+  flex: 1;
+  min-width: 220px;
+  padding: 11px 12px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: #fff;
+  color: #000;
+  outline: none;
+}
+
+.input:focus {
+  border-color: rgba(0,0,0,.35);
+}
+
+.btn {
+  padding: 11px 14px;
+  border-radius: 14px;
+  border: 1px solid #000;
+  background: #000;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform .12s ease, opacity .12s ease;
+}
+
+.btn:hover { opacity: .92 }
+.btn:active { transform: scale(.97) }
+
+.btn.ghost {
+  background: #fff;
+  color: #000;
+  border: 1px solid var(--border);
+}
+
+/* ================= Pills ================= */
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  font-size: 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+}
+
+/* ================= Icons ================= */
+
+.ico {
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.ico svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+
+/* ================= Truncation ================= */
+
+.truncate {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.fileName {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 800;
+  min-width: 0;
+}
+
+.fileNameText {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.filePath {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 4px;
+  max-width: 100%;
+}
+
+/* ================= Table (Desktop) ================= */
+
+.tableWrap {
+  margin-top: 14px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 760px;
+}
+
+.table thead th {
+  font-size: 12px;
+  color: var(--muted);
+  text-align: left;
+  padding: 12px 10px;
+  border-bottom: 1px solid var(--border);
+  background: #fff;
+}
+
+.table tbody td {
+  padding: 12px 10px;
+  vertical-align: top;
+  border-top: 1px solid var(--border);
+}
+
+.table td:first-child {
+  max-width: 420px;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.actions .btn {
+  padding: 8px 10px;
+  font-size: 13px;
+  border-radius: 12px;
+}
+
+/* ================= Mobile Cards ================= */
+
+.cards {
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.fileCard {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 14px;
+  box-shadow: var(--shadow);
+  animation: fadeUp .25s ease-out both;
+}
+
+.fileMeta {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+/* ================= Animations ================= */
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(6px) }
+  to { opacity: 1; transform: translateY(0) }
+}
+
+/* ================= Toast ================= */
+
+.toast {
+  margin-top: 12px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 10px 12px;
+  font-size: 13px;
+}
+
+/* ================= Mobile Rules ================= */
+
 @media (max-width: 760px) {
-  .container{padding:16px}
-  .input{min-width: 100%}
+  .container { padding: 16px }
 
-  /* Hide table on mobile, show cards */
-  #tableWrap{display:none}
-  #cards{display:flex}
-  #cards.hidden{display:none !important}
+  /* Hide table, show cards */
+  .tableWrap { display: none }
+  .cards { display: flex }
 
-  /* Make sure titles/paths truncate correctly */
-  .fileName{min-width:0}
-  .fileNameText{min-width:0}
-  .filePath{min-width:0}
+  .input { min-width: 100% }
 
-  .fileMeta{
-    display:flex;
-    gap:10px;
-    flex-wrap:wrap;
-    margin-top:10px;
-  }
-
-  /* Actions: responsive grid so buttons never force weird widths */
-  .actions{
-    margin-top:10px;
-    display:grid;
+  /* Buttons never stretch cards */
+  .actions {
+    display: grid;
     grid-template-columns: 1fr 1fr;
-    gap:10px;
-  }
-  .actions .btn{
-    width:100%;
-    min-width:0;
+    gap: 10px;
   }
 
-  /* On very small screens, stack buttons */
-  @media (max-width: 420px){
-    .actions{grid-template-columns: 1fr;}
+  .actions .btn {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+/* Extra small phones */
+@media (max-width: 420px) {
+  .actions {
+    grid-template-columns: 1fr;
   }
 }
