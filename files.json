@@ -1,11 +1,8 @@
 {
   "files": [
-    {
-      "name": "test.jpg",
-      "path": "/test.jpg",
-      "type": "image/jpg",
-      "size": "115 KB",
-      "updated": "2026-01-20"
-    }
+    { "name": "test.jpg", "path": "/test.jpg", "type": "image/jpg", "size": "115 KB", "updated": "2026-01-27" },
+
+    { "name": "Music", "path": "Music/", "kind": "folder" },
+    { "name": "American Wedding.mp3", "path": "Music/americanwedding.mp3", "type": "audio/mp3", "size": "7.7 MB", "updated": "2026-01-27" }
   ]
 }
