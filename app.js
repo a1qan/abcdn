@@ -15,14 +15,19 @@ const search = $("search");
 const count = $("count");
 const toast = $("toast");
 
-let allFiles = [];
+// New UI bits
+const kindFilter = $("kindFilter");
+const upFolderBtn = $("upFolderBtn");
+const currentFolderPill = $("currentFolderPill");
+
+let allItems = [];            // from files.json (files + folders)
+let currentFolder = "";       // prefix like "images/" or "" for root
 
 function showToast(text) {
   toast.textContent = text;
   toast.classList.remove("hidden");
   toast.style.animation = "none";
-  // force reflow to restart animation
-  toast.offsetHeight;
+  toast.offsetHeight; // restart animation
   toast.style.animation = "";
 
   clearTimeout(showToast._t);
@@ -40,6 +45,17 @@ function isAuthed() {
 
 function cleanPath(p) {
   return String(p || "").replace(/^\/+/, "");
+}
+
+function isFolderItem(item) {
+  // folder if explicitly marked OR path ends with /
+  return item.kind === "folder" || /\/$/.test(cleanPath(item.path));
+}
+
+function normalizeFolderPath(p) {
+  const cp = cleanPath(p);
+  if (!cp) return "";
+  return cp.endsWith("/") ? cp : (cp + "/");
 }
 
 function cdnUrlFor(path) {
@@ -60,15 +76,47 @@ function downloadPageFor(file) {
   );
 }
 
+function displayCdnPath(path) {
+  return `/cdn/${cleanPath(path)}`;
+}
+
+function updateFolderPill() {
+  currentFolderPill.textContent = `Folder: /${currentFolder}`;
+}
+
+function folderDepth(folder) {
+  if (!folder) return 0;
+  return folder.split("/").filter(Boolean).length;
+}
+
+function goUpFolder() {
+  if (!currentFolder) return;
+  const parts = currentFolder.split("/").filter(Boolean);
+  parts.pop();
+  currentFolder = parts.length ? (parts.join("/") + "/") : "";
+  updateFolderPill();
+  renderList();
+}
+
+function openFolder(folderPath) {
+  currentFolder = normalizeFolderPath(folderPath);
+  updateFolderPill();
+  renderList();
+}
+
 async function copy(text) {
   await navigator.clipboard.writeText(text);
   showToast("Copied to clipboard.");
 }
 
-async function loadFiles() {
+async function loadItems() {
   const r = await fetch("./files.json", { cache: "no-store" });
   const j = await r.json();
-  allFiles = Array.isArray(j.files) ? j.files : [];
+
+  // Support both { files: [] } and { items: [] }
+  const items = Array.isArray(j.items) ? j.items : (Array.isArray(j.files) ? j.files : []);
+  allItems = items;
+
   renderList();
   showToast("Refreshed.");
 }
@@ -79,35 +127,92 @@ function renderViews() {
   dashView.classList.toggle("hidden", !authed);
   logoutBtn.classList.toggle("hidden", !authed);
 
-  if (authed) loadFiles();
+  if (authed) {
+    updateFolderPill();
+    loadItems();
+  }
+}
+
+// Determines if an item is inside currentFolder (direct child, not deep)
+function isDirectChildOfCurrent(itemPath, isFolder) {
+  const p = cleanPath(itemPath);
+  const folder = currentFolder; // already normalized
+  if (!p.startsWith(folder)) return false;
+
+  const rest = p.slice(folder.length); // path after folder prefix
+  if (!rest) return false;
+
+  // For folders like "images/" inside root -> rest would be "images/"
+  // We only want direct children: no extra "/" in rest (except trailing slash)
+  const restNoTrailing = isFolder ? rest.replace(/\/$/, "") : rest;
+  return !restNoTrailing.includes("/");
+}
+
+function sortFilesThenFolders(files, folders) {
+  // folders must be at bottom, so return files then folders
+  const nameSort = (a, b) => (a.name || "").localeCompare(b.name || "");
+  files.sort(nameSort);
+  folders.sort(nameSort);
+  return { files, folders };
+}
+
+function matchesSearch(item, q) {
+  if (!q) return true;
+  const hay = `${item.name || ""} ${item.path || ""} ${item.type || ""}`.toLowerCase();
+  return hay.includes(q);
 }
 
 function renderList() {
   const q = (search.value || "").toLowerCase().trim();
-  const filtered = allFiles.filter((f) => {
-    const hay = `${f.name || ""} ${f.path || ""} ${f.type || ""}`.toLowerCase();
-    return hay.includes(q);
-  });
-
-  tbody.innerHTML = "";
+  const mode = kindFilter.value || "all";
   const isMobile = window.matchMedia("(max-width: 760px)").matches;
 
-  filtered.forEach((f) => {
-    const cdn = cdnUrlFor(f.path);
-    const dl = downloadPageFor(f);
-    const displayPath = `/cdn/${cleanPath(f.path)}`;
+  // Split into direct children of current folder
+  let files = [];
+  let folders = [];
 
-    if (isMobile) {
+  for (const item of allItems) {
+    const folder = isFolderItem(item);
+    const path = folder ? normalizeFolderPath(item.path) : cleanPath(item.path);
+
+    // must be direct child of current folder
+    if (!isDirectChildOfCurrent(path, folder)) continue;
+
+    // folder/files filter
+    if (mode === "files" && folder) continue;
+    if (mode === "folders" && !folder) continue;
+
+    // search filter
+    if (!matchesSearch(item, q)) continue;
+
+    const normalizedItem = { ...item, path };
+
+    if (folder) folders.push(normalizedItem);
+    else files.push(normalizedItem);
+  }
+
+  ({ files, folders } = sortFilesThenFolders(files, folders));
+
+  // Clear output
+  tbody.innerHTML = "";
+
+  // MOBILE (cards)
+  if (isMobile) {
+    // Render files first
+    for (const f of files) {
+      const cdn = cdnUrlFor(f.path);
+      const dl = downloadPageFor(f);
+
       const card = document.createElement("div");
       card.className = "fileCard";
 
       const title = document.createElement("div");
       title.className = "fileName";
-      title.textContent = f.name || "(unnamed)";
+      title.textContent = `📄 ${f.name || "(unnamed)"}`;
 
       const sub = document.createElement("div");
       sub.className = "filePath";
-      sub.textContent = displayPath;
+      sub.textContent = displayCdnPath(f.path);
 
       const meta = document.createElement("div");
       meta.className = "fileMeta";
@@ -127,7 +232,7 @@ function renderList() {
 
       const btnOpen = document.createElement("button");
       btnOpen.className = "btn ghost";
-      btnOpen.textContent = "Open (CDN)";
+      btnOpen.textContent = "Open";
       btnOpen.onclick = () => window.open(cdn, "_blank", "noopener,noreferrer");
 
       const btnDl = document.createElement("button");
@@ -143,21 +248,67 @@ function renderList() {
       card.appendChild(sub);
       card.appendChild(meta);
       card.appendChild(actions);
-
       tbody.appendChild(card);
-      return;
     }
 
-    // Desktop table row
+    // Render folders at bottom
+    for (const f of folders) {
+      const folderPath = normalizeFolderPath(f.path);
+
+      const card = document.createElement("div");
+      card.className = "fileCard";
+
+      const title = document.createElement("div");
+      title.className = "fileName";
+      title.textContent = `📁 ${f.name || folderPath.replace(/\/$/, "").split("/").pop() || "folder"}`;
+
+      const sub = document.createElement("div");
+      sub.className = "filePath";
+      sub.textContent = `/${folderPath}`;
+
+      const meta = document.createElement("div");
+      meta.className = "fileMeta";
+      meta.innerHTML = `
+        <span class="pill">Folder</span>
+        <span class="pill">Depth: ${folderDepth(folderPath)}</span>
+      `;
+
+      const actions = document.createElement("div");
+      actions.className = "actions";
+
+      const btnOpenFolder = document.createElement("button");
+      btnOpenFolder.className = "btn";
+      btnOpenFolder.textContent = "Open folder";
+      btnOpenFolder.onclick = () => openFolder(folderPath);
+
+      actions.appendChild(btnOpenFolder);
+
+      card.appendChild(title);
+      card.appendChild(sub);
+      card.appendChild(meta);
+      card.appendChild(actions);
+      tbody.appendChild(card);
+    }
+
+    count.textContent = `${files.length} file(s), ${folders.length} folder(s)`;
+    return;
+  }
+
+  // DESKTOP (table rows)
+  // Files first
+  for (const f of files) {
+    const cdn = cdnUrlFor(f.path);
+    const dl = downloadPageFor(f);
+
     const tr = document.createElement("tr");
 
     const nameTd = document.createElement("td");
     const nm = document.createElement("div");
     nm.className = "fileName";
-    nm.textContent = f.name || "(unnamed)";
+    nm.textContent = `📄 ${f.name || "(unnamed)"}`;
     const path = document.createElement("div");
     path.className = "filePath";
-    path.textContent = displayPath;
+    path.textContent = displayCdnPath(f.path);
     nameTd.appendChild(nm);
     nameTd.appendChild(path);
 
@@ -181,7 +332,7 @@ function renderList() {
 
     const btnOpen = document.createElement("button");
     btnOpen.className = "btn ghost";
-    btnOpen.textContent = "Open (CDN)";
+    btnOpen.textContent = "Open";
     btnOpen.onclick = () => window.open(cdn, "_blank", "noopener,noreferrer");
 
     const btnDl = document.createElement("button");
@@ -201,9 +352,55 @@ function renderList() {
     tr.appendChild(actTd);
 
     tbody.appendChild(tr);
-  });
+  }
 
-  count.textContent = `${filtered.length} file(s)`;
+  // Folders at bottom
+  for (const f of folders) {
+    const folderPath = normalizeFolderPath(f.path);
+
+    const tr = document.createElement("tr");
+
+    const nameTd = document.createElement("td");
+    const nm = document.createElement("div");
+    nm.className = "fileName";
+    nm.textContent = `📁 ${f.name || folderPath.replace(/\/$/, "").split("/").pop() || "folder"}`;
+    const path = document.createElement("div");
+    path.className = "filePath";
+    path.textContent = `/${folderPath}`;
+    nameTd.appendChild(nm);
+    nameTd.appendChild(path);
+
+    const typeTd = document.createElement("td");
+    typeTd.textContent = "Folder";
+
+    const sizeTd = document.createElement("td");
+    sizeTd.textContent = "—";
+
+    const updTd = document.createElement("td");
+    updTd.textContent = "—";
+
+    const actTd = document.createElement("td");
+    const actions = document.createElement("div");
+    actions.className = "actions";
+
+    const btnOpenFolder = document.createElement("button");
+    btnOpenFolder.className = "btn";
+    btnOpenFolder.textContent = "Open folder";
+    btnOpenFolder.onclick = () => openFolder(folderPath);
+
+    actions.appendChild(btnOpenFolder);
+    actTd.appendChild(actions);
+
+    tr.appendChild(nameTd);
+    tr.appendChild(typeTd);
+    tr.appendChild(sizeTd);
+    tr.appendChild(updTd);
+    tr.appendChild(actTd);
+
+    tbody.appendChild(tr);
+  }
+
+  count.textContent = `${files.length} file(s), ${folders.length} folder(s)`;
 }
 
 // events
@@ -218,9 +415,15 @@ loginForm.addEventListener("submit", (e) => {
 });
 
 logoutBtn.addEventListener("click", () => setAuthed(false));
-refreshBtn.addEventListener("click", loadFiles);
+refreshBtn.addEventListener("click", loadItems);
 search.addEventListener("input", renderList);
+kindFilter.addEventListener("change", renderList);
+upFolderBtn.addEventListener("click", () => {
+  goUpFolder();
+  showToast("Moved up a folder.");
+});
 window.addEventListener("resize", renderList);
 
 // boot
+updateFolderPill();
 renderViews();
