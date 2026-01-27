@@ -1,0 +1,5 @@
+{
+  "rewrites": [
+    { "source": "/cdn/:path*", "destination": "/assets/:path*" }
+  ]
+}
