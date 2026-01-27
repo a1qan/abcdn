@@ -161,23 +161,15 @@ h2{margin:0 0 8px;font-size:16px;letter-spacing:-.02em}
   .container{padding:16px}
   .input{min-width: 100%}
 
-  .tableWrap{border:none;overflow:visible}
-  .table, thead { display:none; }
+  /* Hide table on mobile, show cards */
+  #tableWrap{display:none}
+  #cards{display:flex}
+  #cards.hidden{display:none !important}
 
-  #tbody{
-    display:flex;
-    flex-direction:column;
-    gap:12px;
-    margin-top:12px;
-  }
-
-  .fileCard{
-    border:1px solid var(--border);
-    border-radius:16px;
-    padding:14px;
-    box-shadow:var(--shadow);
-    animation: rowIn .28s ease-out both;
-  }
+  /* Make sure titles/paths truncate correctly */
+  .fileName{min-width:0}
+  .fileNameText{min-width:0}
+  .filePath{min-width:0}
 
   .fileMeta{
     display:flex;
@@ -186,6 +178,20 @@ h2{margin:0 0 8px;font-size:16px;letter-spacing:-.02em}
     margin-top:10px;
   }
 
-  .actions{margin-top:10px}
-  .actions .btn{flex:1; min-width:140px}
+  /* Actions: responsive grid so buttons never force weird widths */
+  .actions{
+    margin-top:10px;
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap:10px;
+  }
+  .actions .btn{
+    width:100%;
+    min-width:0;
+  }
+
+  /* On very small screens, stack buttons */
+  @media (max-width: 420px){
+    .actions{grid-template-columns: 1fr;}
+  }
 }
