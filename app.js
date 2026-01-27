@@ -15,19 +15,53 @@ const search = $("search");
 const count = $("count");
 const toast = $("toast");
 
-// New UI bits
 const kindFilter = $("kindFilter");
 const upFolderBtn = $("upFolderBtn");
 const currentFolderPill = $("currentFolderPill");
 
-let allItems = [];            // from files.json (files + folders)
-let currentFolder = "";       // prefix like "images/" or "" for root
+let allItems = [];     // from files.json
+let currentFolder = ""; // normalized prefix like "images/" or "" for root
 
+// ---------- Icons (inline SVG, B&W) ----------
+const ICONS = {
+  file: `
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/>
+      <path d="M14 2v6h6"/>
+    </svg>`,
+  folder: `
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 7a2 2 0 0 1 2-2h5l2 2h9a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+    </svg>`,
+  link: `
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M10 13a5 5 0 0 0 7.07 0l1.41-1.41a5 5 0 0 0 0-7.07 5 5 0 0 0-7.07 0L10 5"/>
+      <path d="M14 11a5 5 0 0 0-7.07 0L5.52 12.4a5 5 0 0 0 0 7.07 5 5 0 0 0 7.07 0L14 19"/>
+    </svg>`,
+  download: `
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 3v12"/>
+      <path d="M7 10l5 5 5-5"/>
+      <path d="M5 21h14"/>
+    </svg>`,
+  open: `
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M14 3h7v7"/>
+      <path d="M10 14L21 3"/>
+      <path d="M21 14v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h6"/>
+    </svg>`
+};
+
+function iconHTML(key) {
+  return `<span class="ico" aria-hidden="true">${ICONS[key] || ""}</span>`;
+}
+
+// ---------- UI helpers ----------
 function showToast(text) {
   toast.textContent = text;
   toast.classList.remove("hidden");
   toast.style.animation = "none";
-  toast.offsetHeight; // restart animation
+  toast.offsetHeight;
   toast.style.animation = "";
 
   clearTimeout(showToast._t);
@@ -43,19 +77,23 @@ function isAuthed() {
   return localStorage.getItem(LOGIN_KEY) === "1";
 }
 
+// ---------- Path helpers ----------
 function cleanPath(p) {
   return String(p || "").replace(/^\/+/, "");
-}
-
-function isFolderItem(item) {
-  // folder if explicitly marked OR path ends with /
-  return item.kind === "folder" || /\/$/.test(cleanPath(item.path));
 }
 
 function normalizeFolderPath(p) {
   const cp = cleanPath(p);
   if (!cp) return "";
   return cp.endsWith("/") ? cp : (cp + "/");
+}
+
+function isFolderItem(item) {
+  return item.kind === "folder" || /\/$/.test(cleanPath(item.path));
+}
+
+function displayCdnPath(path) {
+  return `/cdn/${cleanPath(path)}`;
 }
 
 function cdnUrlFor(path) {
@@ -76,17 +114,92 @@ function downloadPageFor(file) {
   );
 }
 
-function displayCdnPath(path) {
-  return `/cdn/${cleanPath(path)}`;
+// ---------- Folder stats (size + updated) ----------
+function parseSizeToBytes(sizeStr) {
+  // supports "123 B", "42 KB", "1.2 MB", "3 GB"
+  if (!sizeStr) return 0;
+  const s = String(sizeStr).trim().toUpperCase();
+  const m = s.match(/^([\d.]+)\s*(B|KB|MB|GB|TB)?$/);
+  if (!m) return 0;
+  const n = Number(m[1]);
+  if (!isFinite(n)) return 0;
+  const unit = m[2] || "B";
+  const mult = {
+    B: 1,
+    KB: 1024,
+    MB: 1024 ** 2,
+    GB: 1024 ** 3,
+    TB: 1024 ** 4
+  }[unit] || 1;
+  return Math.round(n * mult);
 }
 
+function bytesToNice(bytes) {
+  const b = Number(bytes || 0);
+  if (b < 1024) return `${b} B`;
+  const kb = b / 1024;
+  if (kb < 1024) return `${Math.round(kb)} KB`;
+  const mb = kb / 1024;
+  if (mb < 1024) return `${mb.toFixed(1).replace(/\.0$/, "")} MB`;
+  const gb = mb / 1024;
+  return `${gb.toFixed(1).replace(/\.0$/, "")} GB`;
+}
+
+function parseUpdatedToMs(updatedStr) {
+  // supports "2026-01-27" or ISO; fallback 0
+  if (!updatedStr) return 0;
+  const d = new Date(updatedStr);
+  const ms = d.getTime();
+  return isFinite(ms) ? ms : 0;
+}
+
+function formatUpdated(ms) {
+  if (!ms) return "—";
+  const d = new Date(ms);
+  // compact date/time
+  return d.toLocaleString(undefined, { year: "numeric", month: "short", day: "2-digit" });
+}
+
+// Build stats for folders by scanning descendant files
+function buildFolderStats(items) {
+  const files = items
+    .filter(x => !isFolderItem(x))
+    .map(x => ({
+      path: cleanPath(x.path),
+      bytes: parseSizeToBytes(x.size),
+      updatedMs: parseUpdatedToMs(x.updated)
+    }));
+
+  // stats: { "images/": { bytes, updatedMs } }
+  const stats = {};
+
+  const folderPaths = items
+    .filter(x => isFolderItem(x))
+    .map(x => normalizeFolderPath(x.path));
+
+  // ensure folderPaths unique
+  const uniqFolders = [...new Set(folderPaths)];
+
+  for (const folder of uniqFolders) {
+    let bytes = 0;
+    let latest = 0;
+    for (const f of files) {
+      if (f.path.startsWith(folder)) {
+        bytes += f.bytes || 0;
+        if ((f.updatedMs || 0) > latest) latest = f.updatedMs || 0;
+      }
+    }
+    stats[folder] = { bytes, latest };
+  }
+
+  return stats;
+}
+
+let folderStats = {}; // set after load
+
+// ---------- Folder navigation ----------
 function updateFolderPill() {
   currentFolderPill.textContent = `Folder: /${currentFolder}`;
-}
-
-function folderDepth(folder) {
-  if (!folder) return 0;
-  return folder.split("/").filter(Boolean).length;
 }
 
 function goUpFolder() {
@@ -104,6 +217,29 @@ function openFolder(folderPath) {
   renderList();
 }
 
+// Direct child check
+function isDirectChildOfCurrent(itemPath, isFolder) {
+  const p = cleanPath(itemPath);
+  const folder = currentFolder;
+  if (!p.startsWith(folder)) return false;
+
+  const rest = p.slice(folder.length);
+  if (!rest) return false;
+
+  const restNoTrailing = isFolder ? rest.replace(/\/$/, "") : rest;
+  return !restNoTrailing.includes("/");
+}
+
+function matchesSearch(item, q) {
+  if (!q) return true;
+  const hay = `${item.name || ""} ${item.path || ""} ${item.type || ""}`.toLowerCase();
+  return hay.includes(q);
+}
+
+function sortName(a, b) {
+  return (a.name || "").localeCompare(b.name || "");
+}
+
 async function copy(text) {
   await navigator.clipboard.writeText(text);
   showToast("Copied to clipboard.");
@@ -112,11 +248,10 @@ async function copy(text) {
 async function loadItems() {
   const r = await fetch("./files.json", { cache: "no-store" });
   const j = await r.json();
-
-  // Support both { files: [] } and { items: [] }
   const items = Array.isArray(j.items) ? j.items : (Array.isArray(j.files) ? j.files : []);
   allItems = items;
 
+  folderStats = buildFolderStats(allItems);
   renderList();
   showToast("Refreshed.");
 }
@@ -133,41 +268,11 @@ function renderViews() {
   }
 }
 
-// Determines if an item is inside currentFolder (direct child, not deep)
-function isDirectChildOfCurrent(itemPath, isFolder) {
-  const p = cleanPath(itemPath);
-  const folder = currentFolder; // already normalized
-  if (!p.startsWith(folder)) return false;
-
-  const rest = p.slice(folder.length); // path after folder prefix
-  if (!rest) return false;
-
-  // For folders like "images/" inside root -> rest would be "images/"
-  // We only want direct children: no extra "/" in rest (except trailing slash)
-  const restNoTrailing = isFolder ? rest.replace(/\/$/, "") : rest;
-  return !restNoTrailing.includes("/");
-}
-
-function sortFilesThenFolders(files, folders) {
-  // folders must be at bottom, so return files then folders
-  const nameSort = (a, b) => (a.name || "").localeCompare(b.name || "");
-  files.sort(nameSort);
-  folders.sort(nameSort);
-  return { files, folders };
-}
-
-function matchesSearch(item, q) {
-  if (!q) return true;
-  const hay = `${item.name || ""} ${item.path || ""} ${item.type || ""}`.toLowerCase();
-  return hay.includes(q);
-}
-
 function renderList() {
   const q = (search.value || "").toLowerCase().trim();
   const mode = kindFilter.value || "all";
   const isMobile = window.matchMedia("(max-width: 760px)").matches;
 
-  // Split into direct children of current folder
   let files = [];
   let folders = [];
 
@@ -175,118 +280,93 @@ function renderList() {
     const folder = isFolderItem(item);
     const path = folder ? normalizeFolderPath(item.path) : cleanPath(item.path);
 
-    // must be direct child of current folder
     if (!isDirectChildOfCurrent(path, folder)) continue;
 
-    // folder/files filter
     if (mode === "files" && folder) continue;
     if (mode === "folders" && !folder) continue;
 
-    // search filter
     if (!matchesSearch(item, q)) continue;
 
     const normalizedItem = { ...item, path };
-
     if (folder) folders.push(normalizedItem);
     else files.push(normalizedItem);
   }
 
-  ({ files, folders } = sortFilesThenFolders(files, folders));
+  files.sort(sortName);
+  folders.sort(sortName);
 
-  // Clear output
   tbody.innerHTML = "";
 
-  // MOBILE (cards)
+  // ---------- Mobile cards ----------
   if (isMobile) {
-    // Render files first
+    // Files first
     for (const f of files) {
       const cdn = cdnUrlFor(f.path);
       const dl = downloadPageFor(f);
+      const displayPath = displayCdnPath(f.path);
 
       const card = document.createElement("div");
       card.className = "fileCard";
 
-      const title = document.createElement("div");
-      title.className = "fileName";
-      title.textContent = `📄 ${f.name || "(unnamed)"}`;
+      card.innerHTML = `
+        <div class="fileName">
+          ${iconHTML("file")}
+          <div class="fileNameText truncate" title="${f.name || ""}">${f.name || "(unnamed)"}</div>
+        </div>
+        <div class="filePath truncate" title="${displayPath}">${displayPath}</div>
 
-      const sub = document.createElement("div");
-      sub.className = "filePath";
-      sub.textContent = displayCdnPath(f.path);
+        <div class="fileMeta">
+          <span class="pill">Type: ${f.type || "—"}</span>
+          <span class="pill">Size: ${f.size || "—"}</span>
+          <span class="pill">Updated: ${f.updated || "—"}</span>
+        </div>
 
-      const meta = document.createElement("div");
-      meta.className = "fileMeta";
-      meta.innerHTML = `
-        <span class="pill">Type: ${f.type || "—"}</span>
-        <span class="pill">Size: ${f.size || "—"}</span>
-        <span class="pill">Updated: ${f.updated || "—"}</span>
+        <div class="actions">
+          <button class="btn ghost" type="button">Copy CDN URL</button>
+          <button class="btn ghost" type="button">Open</button>
+          <button class="btn" type="button">Download</button>
+        </div>
       `;
 
-      const actions = document.createElement("div");
-      actions.className = "actions";
+      const btns = card.querySelectorAll("button");
+      btns[0].onclick = () => copy(cdn);
+      btns[1].onclick = () => window.open(cdn, "_blank", "noopener,noreferrer");
+      btns[2].onclick = () => window.open(dl, "_blank", "noopener,noreferrer");
 
-      const btnCopy = document.createElement("button");
-      btnCopy.className = "btn ghost";
-      btnCopy.textContent = "Copy CDN URL";
-      btnCopy.onclick = () => copy(cdn);
-
-      const btnOpen = document.createElement("button");
-      btnOpen.className = "btn ghost";
-      btnOpen.textContent = "Open";
-      btnOpen.onclick = () => window.open(cdn, "_blank", "noopener,noreferrer");
-
-      const btnDl = document.createElement("button");
-      btnDl.className = "btn";
-      btnDl.textContent = "Download";
-      btnDl.onclick = () => window.open(dl, "_blank", "noopener,noreferrer");
-
-      actions.appendChild(btnCopy);
-      actions.appendChild(btnOpen);
-      actions.appendChild(btnDl);
-
-      card.appendChild(title);
-      card.appendChild(sub);
-      card.appendChild(meta);
-      card.appendChild(actions);
       tbody.appendChild(card);
     }
 
-    // Render folders at bottom
+    // Folders at bottom
     for (const f of folders) {
       const folderPath = normalizeFolderPath(f.path);
+      const stat = folderStats[folderPath] || { bytes: 0, latest: 0 };
+      const sizeNice = bytesToNice(stat.bytes || 0);
+      const updatedNice = formatUpdated(stat.latest || 0);
 
       const card = document.createElement("div");
       card.className = "fileCard";
 
-      const title = document.createElement("div");
-      title.className = "fileName";
-      title.textContent = `📁 ${f.name || folderPath.replace(/\/$/, "").split("/").pop() || "folder"}`;
+      const folderName = f.name || folderPath.replace(/\/$/, "").split("/").pop() || "folder";
 
-      const sub = document.createElement("div");
-      sub.className = "filePath";
-      sub.textContent = `/${folderPath}`;
+      card.innerHTML = `
+        <div class="fileName">
+          ${iconHTML("folder")}
+          <div class="fileNameText truncate" title="${folderName}">${folderName}</div>
+        </div>
+        <div class="filePath truncate" title="/${folderPath}">/${folderPath}</div>
 
-      const meta = document.createElement("div");
-      meta.className = "fileMeta";
-      meta.innerHTML = `
-        <span class="pill">Folder</span>
-        <span class="pill">Depth: ${folderDepth(folderPath)}</span>
+        <div class="fileMeta">
+          <span class="pill">Folder</span>
+          <span class="pill">Size: ${sizeNice}</span>
+          <span class="pill">Updated: ${updatedNice}</span>
+        </div>
+
+        <div class="actions">
+          <button class="btn" type="button">Open folder</button>
+        </div>
       `;
 
-      const actions = document.createElement("div");
-      actions.className = "actions";
-
-      const btnOpenFolder = document.createElement("button");
-      btnOpenFolder.className = "btn";
-      btnOpenFolder.textContent = "Open folder";
-      btnOpenFolder.onclick = () => openFolder(folderPath);
-
-      actions.appendChild(btnOpenFolder);
-
-      card.appendChild(title);
-      card.appendChild(sub);
-      card.appendChild(meta);
-      card.appendChild(actions);
+      card.querySelector("button").onclick = () => openFolder(folderPath);
       tbody.appendChild(card);
     }
 
@@ -294,122 +374,81 @@ function renderList() {
     return;
   }
 
-  // DESKTOP (table rows)
-  // Files first
+  // ---------- Desktop table ----------
   for (const f of files) {
     const cdn = cdnUrlFor(f.path);
     const dl = downloadPageFor(f);
+    const displayPath = displayCdnPath(f.path);
 
     const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>
+        <div class="fileName">
+          ${iconHTML("file")}
+          <div class="fileNameText truncate" title="${f.name || ""}">${f.name || "(unnamed)"}</div>
+        </div>
+        <div class="filePath truncate" title="${displayPath}">${displayPath}</div>
+      </td>
+      <td>${f.type || "—"}</td>
+      <td>${f.size || "—"}</td>
+      <td>${f.updated || "—"}</td>
+      <td>
+        <div class="actions">
+          <button class="btn ghost" type="button">${iconHTML("link")}<span class="truncate">Copy CDN URL</span></button>
+          <button class="btn ghost" type="button">${iconHTML("open")}<span class="truncate">Open</span></button>
+          <button class="btn" type="button">${iconHTML("download")}<span class="truncate">Download</span></button>
+        </div>
+      </td>
+    `;
 
-    const nameTd = document.createElement("td");
-    const nm = document.createElement("div");
-    nm.className = "fileName";
-    nm.textContent = `📄 ${f.name || "(unnamed)"}`;
-    const path = document.createElement("div");
-    path.className = "filePath";
-    path.textContent = displayCdnPath(f.path);
-    nameTd.appendChild(nm);
-    nameTd.appendChild(path);
-
-    const typeTd = document.createElement("td");
-    typeTd.textContent = f.type || "—";
-
-    const sizeTd = document.createElement("td");
-    sizeTd.textContent = f.size || "—";
-
-    const updTd = document.createElement("td");
-    updTd.textContent = f.updated || "—";
-
-    const actTd = document.createElement("td");
-    const actions = document.createElement("div");
-    actions.className = "actions";
-
-    const btnCopy = document.createElement("button");
-    btnCopy.className = "btn ghost";
-    btnCopy.textContent = "Copy CDN URL";
-    btnCopy.onclick = () => copy(cdn);
-
-    const btnOpen = document.createElement("button");
-    btnOpen.className = "btn ghost";
-    btnOpen.textContent = "Open";
-    btnOpen.onclick = () => window.open(cdn, "_blank", "noopener,noreferrer");
-
-    const btnDl = document.createElement("button");
-    btnDl.className = "btn";
-    btnDl.textContent = "Download";
-    btnDl.onclick = () => window.open(dl, "_blank", "noopener,noreferrer");
-
-    actions.appendChild(btnCopy);
-    actions.appendChild(btnOpen);
-    actions.appendChild(btnDl);
-    actTd.appendChild(actions);
-
-    tr.appendChild(nameTd);
-    tr.appendChild(typeTd);
-    tr.appendChild(sizeTd);
-    tr.appendChild(updTd);
-    tr.appendChild(actTd);
+    const btns = tr.querySelectorAll("button");
+    btns[0].onclick = () => copy(cdn);
+    btns[1].onclick = () => window.open(cdn, "_blank", "noopener,noreferrer");
+    btns[2].onclick = () => window.open(dl, "_blank", "noopener,noreferrer");
 
     tbody.appendChild(tr);
   }
 
-  // Folders at bottom
   for (const f of folders) {
     const folderPath = normalizeFolderPath(f.path);
+    const stat = folderStats[folderPath] || { bytes: 0, latest: 0 };
+    const sizeNice = bytesToNice(stat.bytes || 0);
+    const updatedNice = formatUpdated(stat.latest || 0);
+
+    const folderName = f.name || folderPath.replace(/\/$/, "").split("/").pop() || "folder";
 
     const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>
+        <div class="fileName">
+          ${iconHTML("folder")}
+          <div class="fileNameText truncate" title="${folderName}">${folderName}</div>
+        </div>
+        <div class="filePath truncate" title="/${folderPath}">/${folderPath}</div>
+      </td>
+      <td>Folder</td>
+      <td>${sizeNice}</td>
+      <td>${updatedNice}</td>
+      <td>
+        <div class="actions">
+          <button class="btn" type="button">${iconHTML("open")}<span class="truncate">Open folder</span></button>
+        </div>
+      </td>
+    `;
 
-    const nameTd = document.createElement("td");
-    const nm = document.createElement("div");
-    nm.className = "fileName";
-    nm.textContent = `📁 ${f.name || folderPath.replace(/\/$/, "").split("/").pop() || "folder"}`;
-    const path = document.createElement("div");
-    path.className = "filePath";
-    path.textContent = `/${folderPath}`;
-    nameTd.appendChild(nm);
-    nameTd.appendChild(path);
-
-    const typeTd = document.createElement("td");
-    typeTd.textContent = "Folder";
-
-    const sizeTd = document.createElement("td");
-    sizeTd.textContent = "—";
-
-    const updTd = document.createElement("td");
-    updTd.textContent = "—";
-
-    const actTd = document.createElement("td");
-    const actions = document.createElement("div");
-    actions.className = "actions";
-
-    const btnOpenFolder = document.createElement("button");
-    btnOpenFolder.className = "btn";
-    btnOpenFolder.textContent = "Open folder";
-    btnOpenFolder.onclick = () => openFolder(folderPath);
-
-    actions.appendChild(btnOpenFolder);
-    actTd.appendChild(actions);
-
-    tr.appendChild(nameTd);
-    tr.appendChild(typeTd);
-    tr.appendChild(sizeTd);
-    tr.appendChild(updTd);
-    tr.appendChild(actTd);
-
+    tr.querySelector("button").onclick = () => openFolder(folderPath);
     tbody.appendChild(tr);
   }
 
   count.textContent = `${files.length} file(s), ${folders.length} folder(s)`;
 }
 
-// events
+// ---------- Events ----------
 loginForm.addEventListener("submit", (e) => {
   e.preventDefault();
   loginMsg.textContent = "";
   const em = ($("email").value || "").trim();
   const pw = ($("password").value || "").trim();
-
   if (em === DEFAULT_EMAIL && pw === DEFAULT_PASS) setAuthed(true);
   else loginMsg.textContent = "Invalid login (edit DEFAULT_EMAIL / DEFAULT_PASS in app.js).";
 });
