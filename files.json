@@ -20,6 +20,6 @@
     { "name": "Winterfell Sony.cube", "path": "LUTs/Winterfell Sony.cube", "type": "LUT/cube", "size": "1.2 MB", "updated": "2026-01-27" },
 
     { "name": "DJI Footage", "path": "DJI Footage/", "kind": "folder" },
-    { "name": "25.01.26", "path": "DJI Footage/25.01.26/", "kind": "folder" },
+    { "name": "25.01.26", "path": "DJI Footage/25.01.26/", "kind": "folder" }
   ]
 }
