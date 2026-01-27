@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>CDN</title>
+  <style>
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;background:#fff;color:#000}
+    .wrap{max-width:780px;margin:0 auto;padding:28px}
+    .card{
+      border:1px solid rgba(0,0,0,.18);
+      border-radius:16px;
+      padding:18px;
+      box-shadow:0 12px 40px rgba(0,0,0,.06);
+      transform:translateY(6px);
+      opacity:0;
+      animation:enter .35s ease-out forwards;
+    }
+    @keyframes enter{to{transform:translateY(0);opacity:1}}
+    .muted{color:rgba(0,0,0,.65)}
+    code{border:1px solid rgba(0,0,0,.18);border-radius:10px;padding:2px 8px}
+    .bar{
+      height:2px;border-radius:999px;background:rgba(0,0,0,.12);
+      overflow:hidden;margin-top:14px
+    }
+    .bar > div{
+      height:100%;width:35%;
+      background:#000;border-radius:999px;
+      animation:load 1.05s ease-in-out infinite;
+    }
+    @keyframes load{
+      0%{transform:translateX(-120%)}
+      50%{transform:translateX(160%)}
+      100%{transform:translateX(420%)}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1 style="margin:0 0 8px;font-size:18px;letter-spacing:-.02em;">Redirecting…</h1>
+      <p class="muted" id="status">Finding link.</p>
+      <p class="muted">Slug: <code id="slug">—</code></p>
+      <div class="bar"><div></div></div>
+    </div>
+  </div>
+
+  <script>
+    const LINKS_KEY = "cdn_links";
+
+    function getSlug() {
+      const hash = (location.hash || "").replace(/^#/, "").trim();
+      if (hash) return hash;
+      const params = new URLSearchParams(location.search);
+      return (params.get("slug") || "").trim();
+    }
+
+    const slug = getSlug();
+    document.getElementById("slug").textContent = slug || "—";
+
+    const status = document.getElementById("status");
+
+    if (!slug) {
+      status.textContent = "No slug provided.";
+    } else {
+      let links = {};
+      try { links = JSON.parse(localStorage.getItem(LINKS_KEY) || "{}"); } catch {}
+      const url = links[slug];
+
+      if (!url) {
+        status.textContent = "Slug not found in this browser storage (this template stores slugs locally).";
+      } else {
+        status.textContent = "Redirecting now…";
+        location.replace(url);
+      }
+    }
+  </script>
+</body>
+</html>

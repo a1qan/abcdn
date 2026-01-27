@@ -1,0 +1,18 @@
+{
+  "files": [
+    {
+      "name": "test.jpg",
+      "path": "assets/logo.jpg",
+      "type": "image/jpg",
+      "size": "42 KB",
+      "updated": "2026-01-20"
+    },
+    {
+      "name": "tracklist.txt",
+      "path": "assets/tracklist.txt",
+      "type": "text/plain",
+      "size": "2 KB",
+      "updated": "2026-01-18"
+    }
+  ]
+}
