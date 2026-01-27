@@ -1,257 +1,262 @@
-:root {
-  --bg: #ffffff;
-  --fg: #000000;
-  --muted: rgba(0,0,0,.65);
-  --border: rgba(0,0,0,.18);
+:root{
+  --bg:#fff;
+  --fg:#000;
+  --muted:rgba(0,0,0,.65);
+  --border:rgba(0,0,0,.18);
   --shadow: 0 12px 40px rgba(0,0,0,.06);
-  --radius: 16px;
+  --radius:16px;
 }
 
-* { box-sizing: border-box }
-
-html, body {
-  height: 100%;
-}
-
-body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--fg);
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--fg);
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
   -webkit-tap-highlight-color: transparent;
 }
 
-/* ================= Layout ================= */
-
-.container {
-  max-width: 1000px;
-  margin: 0 auto;
-  padding: 24px;
+/* ===== Layout ===== */
+.container{
+  max-width:1000px;
+  margin:0 auto;
+  padding:24px;
 }
 
-.row {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  align-items: center;
+.hidden{display:none !important}
+
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.space{justify-content:space-between}
+
+/* ===== Topbar ===== */
+.topbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:16px;
 }
 
-.space {
-  justify-content: space-between;
+.brand{display:flex;align-items:center;gap:10px}
+.brand h1{margin:0;font-size:18px;letter-spacing:-.02em}
+.dot{
+  width:10px;height:10px;border-radius:999px;
+  background:var(--fg);
 }
 
-.hidden {
-  display: none !important;
+/* ===== Card ===== */
+.card{
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:18px;
+  box-shadow:var(--shadow);
+  transform: translateY(6px);
+  opacity:0;
+  animation: enter .35s ease-out forwards;
+}
+@keyframes enter{
+  to{transform:translateY(0);opacity:1}
 }
 
-/* ================= Inputs & Buttons ================= */
+h2{margin:0 0 8px;font-size:18px;letter-spacing:-.02em}
 
-.input {
-  flex: 1;
-  min-width: 220px;
-  padding: 11px 12px;
-  border-radius: 14px;
-  border: 1px solid var(--border);
-  background: #fff;
-  color: #000;
-  outline: none;
+/* ===== Inputs / Buttons ===== */
+.input{
+  flex:1;
+  min-width:220px;
+  padding:11px 12px;
+  border:1px solid var(--border);
+  border-radius:14px;
+  outline:none;
+  background:#fff;
+  color:#000;
+  transition: border-color .15s ease, transform .12s ease;
+}
+.input:focus{border-color:rgba(0,0,0,.35)}
+.input:active{transform:scale(.99)}
+
+.btn{
+  padding:11px 14px;
+  border-radius:14px;
+  border:1px solid var(--fg);
+  background:var(--fg);
+  color:#fff;
+  cursor:pointer;
+  font-weight:700;
+  transition: transform .12s ease, opacity .12s ease, background .12s ease, color .12s ease, border-color .12s ease;
+}
+.btn:hover{opacity:.92}
+.btn:active{transform:scale(.98)}
+
+.btn.ghost{
+  background:#fff;
+  color:#000;
+  border:1px solid var(--border);
+}
+.btn.ghost:hover{border-color:rgba(0,0,0,.35)}
+
+/* ===== Pills / text ===== */
+.pill{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  border:1px solid var(--border);
+  border-radius:999px;
+  padding:4px 10px;
+  font-size:12px;
+}
+.muted{color:var(--muted);font-size:13px}
+.msg{margin:10px 0 0;font-size:13px;color:var(--muted)}
+
+/* ===== Icons (only used in file/folder titles) ===== */
+.ico{
+  width:18px;height:18px;
+  display:inline-flex;align-items:center;justify-content:center;
+  flex:0 0 auto;
+}
+.ico svg{width:18px;height:18px;display:block}
+
+/* ===== Truncation (prevents resizing) ===== */
+.truncate{
+  overflow:hidden;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+  min-width:0;
 }
 
-.input:focus {
-  border-color: rgba(0,0,0,.35);
+.fileName{
+  font-weight:800;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  min-width:0;
+}
+.fileNameText{min-width:0;max-width:100%}
+.filePath{
+  font-size:12px;
+  color:var(--muted);
+  margin-top:4px;
+  max-width:100%;
 }
 
-.btn {
-  padding: 11px 14px;
-  border-radius: 14px;
-  border: 1px solid #000;
-  background: #000;
-  color: #fff;
-  font-weight: 700;
-  cursor: pointer;
-  transition: transform .12s ease, opacity .12s ease;
+/* ===== Table (Desktop) ===== */
+.tableWrap{
+  margin-top:14px;
+  overflow:auto;
+  border-radius:14px;
+  border:1px solid var(--border);
+  background:#fff;
 }
 
-.btn:hover { opacity: .92 }
-.btn:active { transform: scale(.97) }
-
-.btn.ghost {
-  background: #fff;
-  color: #000;
-  border: 1px solid var(--border);
+.table{
+  width:100%;
+  border-collapse:collapse;
+  min-width:760px;
 }
 
-/* ================= Pills ================= */
-
-.pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
-  font-size: 12px;
-  border-radius: 999px;
-  border: 1px solid var(--border);
+.table th,.table td{
+  padding:12px 10px;
+  text-align:left;
+  vertical-align:top;
 }
 
-/* ================= Icons ================= */
-
-.ico {
-  width: 18px;
-  height: 18px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex: 0 0 auto;
+.table thead th{
+  font-size:12px;
+  color:var(--muted);
+  border-bottom:1px solid var(--border);
+  position:sticky;
+  top:0;
+  background:#fff;
 }
 
-.ico svg {
-  width: 18px;
-  height: 18px;
-  display: block;
+.table tbody tr{
+  border-top:1px solid var(--border);
+  animation: rowIn .22s ease-out both;
+}
+@keyframes rowIn{
+  from{opacity:0;transform:translateY(6px)}
+  to{opacity:1;transform:translateY(0)}
 }
 
-/* ================= Truncation ================= */
+/* Prevent first column from expanding too wide */
+.table td:first-child{max-width:460px}
+.table td:first-child .truncate{max-width:460px}
 
-.truncate {
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
+/* Actions row in table */
+.actions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+.actions .btn{
+  padding:8px 10px;
+  border-radius:12px;
+  font-size:13px;
 }
 
-.fileName {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 800;
-  min-width: 0;
+/* ===== Cards container (Mobile) ===== */
+.cards{
+  display:none;
+  flex-direction:column;
+  gap:12px;
+  margin-top:14px;
 }
 
-.fileNameText {
-  min-width: 0;
-  max-width: 100%;
+.fileCard{
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:14px;
+  box-shadow:var(--shadow);
+  animation: rowIn .22s ease-out both;
 }
 
-.filePath {
-  font-size: 12px;
-  color: var(--muted);
-  margin-top: 4px;
-  max-width: 100%;
+.fileMeta{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-top:10px;
 }
 
-/* ================= Table (Desktop) ================= */
-
-.tableWrap {
-  margin-top: 14px;
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  overflow: hidden;
+/* toast */
+.toast{
+  margin-top:12px;
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:10px 12px;
+  font-size:13px;
 }
 
-.table {
-  width: 100%;
-  border-collapse: collapse;
-  min-width: 760px;
+/* ===== Footer ===== */
+.footer{
+  margin-top:16px;
+  padding:10px 2px;
 }
 
-.table thead th {
-  font-size: 12px;
-  color: var(--muted);
-  text-align: left;
-  padding: 12px 10px;
-  border-bottom: 1px solid var(--border);
-  background: #fff;
-}
-
-.table tbody td {
-  padding: 12px 10px;
-  vertical-align: top;
-  border-top: 1px solid var(--border);
-}
-
-.table td:first-child {
-  max-width: 420px;
-}
-
-.actions {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.actions .btn {
-  padding: 8px 10px;
-  font-size: 13px;
-  border-radius: 12px;
-}
-
-/* ================= Mobile Cards ================= */
-
-.cards {
-  display: none;
-  flex-direction: column;
-  gap: 12px;
-  margin-top: 14px;
-}
-
-.fileCard {
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 14px;
-  box-shadow: var(--shadow);
-  animation: fadeUp .25s ease-out both;
-}
-
-.fileMeta {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-top: 10px;
-}
-
-/* ================= Animations ================= */
-
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(6px) }
-  to { opacity: 1; transform: translateY(0) }
-}
-
-/* ================= Toast ================= */
-
-.toast {
-  margin-top: 12px;
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 10px 12px;
-  font-size: 13px;
-}
-
-/* ================= Mobile Rules ================= */
-
-@media (max-width: 760px) {
-  .container { padding: 16px }
+/* ===== Mobile rules ===== */
+@media (max-width: 760px){
+  .container{padding:16px}
+  .input{min-width:100%}
 
   /* Hide table, show cards */
-  .tableWrap { display: none }
-  .cards { display: flex }
+  #tableWrap{display:none}
+  #cards{display:flex}
 
-  .input { min-width: 100% }
-
-  /* Buttons never stretch cards */
-  .actions {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
+  /* Buttons: clean grid + IMPORTANT: margin-top so it doesn't stick to meta */
+  .fileCard .actions{
+    margin-top:12px;              /* <-- fixes your “no margin” issue */
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
   }
-
-  .actions .btn {
-    width: 100%;
-    min-width: 0;
+  .fileCard .actions .btn{
+    width:100%;
+    min-width:0;
   }
 }
 
 /* Extra small phones */
-@media (max-width: 420px) {
-  .actions {
-    grid-template-columns: 1fr;
+@media (max-width: 420px){
+  .fileCard .actions{
+    grid-template-columns:1fr;
   }
 }
