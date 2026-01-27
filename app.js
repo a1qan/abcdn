@@ -19,10 +19,10 @@ const kindFilter = $("kindFilter");
 const upFolderBtn = $("upFolderBtn");
 const currentFolderPill = $("currentFolderPill");
 
-let allItems = [];     // from files.json
-let currentFolder = ""; // normalized prefix like "images/" or "" for root
+let allItems = [];
+let currentFolder = "";
 
-// ---------- Icons (inline SVG, B&W) ----------
+// ---------- Icons (ONLY for item names) ----------
 const ICONS = {
   file: `
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -32,23 +32,6 @@ const ICONS = {
   folder: `
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
       <path d="M3 7a2 2 0 0 1 2-2h5l2 2h9a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-    </svg>`,
-  link: `
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M10 13a5 5 0 0 0 7.07 0l1.41-1.41a5 5 0 0 0 0-7.07 5 5 0 0 0-7.07 0L10 5"/>
-      <path d="M14 11a5 5 0 0 0-7.07 0L5.52 12.4a5 5 0 0 0 0 7.07 5 5 0 0 0 7.07 0L14 19"/>
-    </svg>`,
-  download: `
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M12 3v12"/>
-      <path d="M7 10l5 5 5-5"/>
-      <path d="M5 21h14"/>
-    </svg>`,
-  open: `
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M14 3h7v7"/>
-      <path d="M10 14L21 3"/>
-      <path d="M21 14v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h6"/>
     </svg>`
 };
 
@@ -116,7 +99,6 @@ function downloadPageFor(file) {
 
 // ---------- Folder stats (size + updated) ----------
 function parseSizeToBytes(sizeStr) {
-  // supports "123 B", "42 KB", "1.2 MB", "3 GB"
   if (!sizeStr) return 0;
   const s = String(sizeStr).trim().toUpperCase();
   const m = s.match(/^([\d.]+)\s*(B|KB|MB|GB|TB)?$/);
@@ -124,13 +106,7 @@ function parseSizeToBytes(sizeStr) {
   const n = Number(m[1]);
   if (!isFinite(n)) return 0;
   const unit = m[2] || "B";
-  const mult = {
-    B: 1,
-    KB: 1024,
-    MB: 1024 ** 2,
-    GB: 1024 ** 3,
-    TB: 1024 ** 4
-  }[unit] || 1;
+  const mult = { B:1, KB:1024, MB:1024**2, GB:1024**3, TB:1024**4 }[unit] || 1;
   return Math.round(n * mult);
 }
 
@@ -146,7 +122,6 @@ function bytesToNice(bytes) {
 }
 
 function parseUpdatedToMs(updatedStr) {
-  // supports "2026-01-27" or ISO; fallback 0
   if (!updatedStr) return 0;
   const d = new Date(updatedStr);
   const ms = d.getTime();
@@ -155,12 +130,9 @@ function parseUpdatedToMs(updatedStr) {
 
 function formatUpdated(ms) {
   if (!ms) return "—";
-  const d = new Date(ms);
-  // compact date/time
-  return d.toLocaleString(undefined, { year: "numeric", month: "short", day: "2-digit" });
+  return new Date(ms).toLocaleString(undefined, { year:"numeric", month:"short", day:"2-digit" });
 }
 
-// Build stats for folders by scanning descendant files
 function buildFolderStats(items) {
   const files = items
     .filter(x => !isFolderItem(x))
@@ -170,15 +142,12 @@ function buildFolderStats(items) {
       updatedMs: parseUpdatedToMs(x.updated)
     }));
 
-  // stats: { "images/": { bytes, updatedMs } }
-  const stats = {};
-
   const folderPaths = items
     .filter(x => isFolderItem(x))
     .map(x => normalizeFolderPath(x.path));
 
-  // ensure folderPaths unique
   const uniqFolders = [...new Set(folderPaths)];
+  const stats = {};
 
   for (const folder of uniqFolders) {
     let bytes = 0;
@@ -195,7 +164,7 @@ function buildFolderStats(items) {
   return stats;
 }
 
-let folderStats = {}; // set after load
+let folderStats = {};
 
 // ---------- Folder navigation ----------
 function updateFolderPill() {
@@ -217,7 +186,6 @@ function openFolder(folderPath) {
   renderList();
 }
 
-// Direct child check
 function isDirectChildOfCurrent(itemPath, isFolder) {
   const p = cleanPath(itemPath);
   const folder = currentFolder;
@@ -281,10 +249,8 @@ function renderList() {
     const path = folder ? normalizeFolderPath(item.path) : cleanPath(item.path);
 
     if (!isDirectChildOfCurrent(path, folder)) continue;
-
     if (mode === "files" && folder) continue;
     if (mode === "folders" && !folder) continue;
-
     if (!matchesSearch(item, q)) continue;
 
     const normalizedItem = { ...item, path };
@@ -299,7 +265,6 @@ function renderList() {
 
   // ---------- Mobile cards ----------
   if (isMobile) {
-    // Files first
     for (const f of files) {
       const cdn = cdnUrlFor(f.path);
       const dl = downloadPageFor(f);
@@ -336,17 +301,16 @@ function renderList() {
       tbody.appendChild(card);
     }
 
-    // Folders at bottom
     for (const f of folders) {
       const folderPath = normalizeFolderPath(f.path);
       const stat = folderStats[folderPath] || { bytes: 0, latest: 0 };
       const sizeNice = bytesToNice(stat.bytes || 0);
       const updatedNice = formatUpdated(stat.latest || 0);
 
+      const folderName = f.name || folderPath.replace(/\/$/, "").split("/").pop() || "folder";
+
       const card = document.createElement("div");
       card.className = "fileCard";
-
-      const folderName = f.name || folderPath.replace(/\/$/, "").split("/").pop() || "folder";
 
       card.innerHTML = `
         <div class="fileName">
@@ -394,9 +358,9 @@ function renderList() {
       <td>${f.updated || "—"}</td>
       <td>
         <div class="actions">
-          <button class="btn ghost" type="button">${iconHTML("link")}<span class="truncate">Copy CDN URL</span></button>
-          <button class="btn ghost" type="button">${iconHTML("open")}<span class="truncate">Open</span></button>
-          <button class="btn" type="button">${iconHTML("download")}<span class="truncate">Download</span></button>
+          <button class="btn ghost" type="button">Copy CDN URL</button>
+          <button class="btn ghost" type="button">Open</button>
+          <button class="btn" type="button">Download</button>
         </div>
       </td>
     `;
@@ -431,7 +395,7 @@ function renderList() {
       <td>${updatedNice}</td>
       <td>
         <div class="actions">
-          <button class="btn" type="button">${iconHTML("open")}<span class="truncate">Open folder</span></button>
+          <button class="btn" type="button">Open folder</button>
         </div>
       </td>
     `;
