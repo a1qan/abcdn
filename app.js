@@ -1,6 +1,6 @@
 const LOGIN_KEY = "cdn_authed";
-const DEFAULT_EMAIL = "admin@example.com";
-const DEFAULT_PASS = "password123";
+const DEFAULT_EMAIL = "user@abcdn.vercel.app";
+const DEFAULT_PASS = "a123";
 
 const $ = (id) => document.getElementById(id);
 
@@ -21,9 +21,10 @@ function showToast(text) {
   toast.textContent = text;
   toast.classList.remove("hidden");
   toast.style.animation = "none";
-  // force reflow
+  // force reflow to restart animation
   toast.offsetHeight;
   toast.style.animation = "";
+
   clearTimeout(showToast._t);
   showToast._t = setTimeout(() => toast.classList.add("hidden"), 2400);
 }
@@ -37,9 +38,26 @@ function isAuthed() {
   return localStorage.getItem(LOGIN_KEY) === "1";
 }
 
+function cleanPath(p) {
+  return String(p || "").replace(/^\/+/, "");
+}
+
 function cdnUrlFor(path) {
-  const clean = String(path || "").replace(/^\//, "");
-  return `${location.origin}/cdn/${clean}`;
+  return `${location.origin}/cdn/${cleanPath(path)}`;
+}
+
+function downloadPageFor(file) {
+  const filePath = cleanPath(file.path);
+  const name = file.name || filePath.split("/").pop() || "";
+  const type = file.type || "";
+  const size = file.size || "";
+  return (
+    `${location.origin}/download.html` +
+    `?file=${encodeURIComponent(filePath)}` +
+    `&name=${encodeURIComponent(name)}` +
+    `&type=${encodeURIComponent(type)}` +
+    `&size=${encodeURIComponent(size)}`
+  );
 }
 
 async function copy(text) {
@@ -60,13 +78,14 @@ function renderViews() {
   loginView.classList.toggle("hidden", authed);
   dashView.classList.toggle("hidden", !authed);
   logoutBtn.classList.toggle("hidden", !authed);
+
   if (authed) loadFiles();
 }
 
 function renderList() {
   const q = (search.value || "").toLowerCase().trim();
-  const filtered = allFiles.filter(f => {
-    const hay = `${f.name||""} ${f.path||""} ${f.type||""}`.toLowerCase();
+  const filtered = allFiles.filter((f) => {
+    const hay = `${f.name || ""} ${f.path || ""} ${f.type || ""}`.toLowerCase();
     return hay.includes(q);
   });
 
@@ -75,6 +94,8 @@ function renderList() {
 
   filtered.forEach((f) => {
     const cdn = cdnUrlFor(f.path);
+    const dl = downloadPageFor(f);
+    const displayPath = `/cdn/${cleanPath(f.path)}`;
 
     if (isMobile) {
       const card = document.createElement("div");
@@ -86,7 +107,7 @@ function renderList() {
 
       const sub = document.createElement("div");
       sub.className = "filePath";
-      sub.textContent = `/cdn/${String(f.path || "").replace(/^\//, "")}`;
+      sub.textContent = displayPath;
 
       const meta = document.createElement("div");
       meta.className = "fileMeta";
@@ -105,12 +126,18 @@ function renderList() {
       btnCopy.onclick = () => copy(cdn);
 
       const btnOpen = document.createElement("button");
-      btnOpen.className = "btn";
-      btnOpen.textContent = "Open";
+      btnOpen.className = "btn ghost";
+      btnOpen.textContent = "Open (CDN)";
       btnOpen.onclick = () => window.open(cdn, "_blank", "noopener,noreferrer");
+
+      const btnDl = document.createElement("button");
+      btnDl.className = "btn";
+      btnDl.textContent = "Download";
+      btnDl.onclick = () => window.open(dl, "_blank", "noopener,noreferrer");
 
       actions.appendChild(btnCopy);
       actions.appendChild(btnOpen);
+      actions.appendChild(btnDl);
 
       card.appendChild(title);
       card.appendChild(sub);
@@ -121,7 +148,7 @@ function renderList() {
       return;
     }
 
-    // Desktop table
+    // Desktop table row
     const tr = document.createElement("tr");
 
     const nameTd = document.createElement("td");
@@ -130,7 +157,7 @@ function renderList() {
     nm.textContent = f.name || "(unnamed)";
     const path = document.createElement("div");
     path.className = "filePath";
-    path.textContent = `/cdn/${String(f.path || "").replace(/^\//, "")}`;
+    path.textContent = displayPath;
     nameTd.appendChild(nm);
     nameTd.appendChild(path);
 
@@ -153,12 +180,18 @@ function renderList() {
     btnCopy.onclick = () => copy(cdn);
 
     const btnOpen = document.createElement("button");
-    btnOpen.className = "btn";
-    btnOpen.textContent = "Open";
+    btnOpen.className = "btn ghost";
+    btnOpen.textContent = "Open (CDN)";
     btnOpen.onclick = () => window.open(cdn, "_blank", "noopener,noreferrer");
+
+    const btnDl = document.createElement("button");
+    btnDl.className = "btn";
+    btnDl.textContent = "Download";
+    btnDl.onclick = () => window.open(dl, "_blank", "noopener,noreferrer");
 
     actions.appendChild(btnCopy);
     actions.appendChild(btnOpen);
+    actions.appendChild(btnDl);
     actTd.appendChild(actions);
 
     tr.appendChild(nameTd);
