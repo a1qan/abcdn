@@ -17,32 +17,17 @@ body{
   -webkit-tap-highlight-color: transparent;
 }
 
-.container{
-  max-width:1000px;
-  margin:0 auto;
-  padding:24px;
-}
+.container{max-width:1000px;margin:0 auto;padding:24px}
 
-.topbar{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  margin-bottom:16px;
-}
-
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
 .brand{display:flex;align-items:center;gap:10px}
 .brand h1{margin:0;font-size:18px;letter-spacing:-.02em}
 
 .dot{
-  width:10px;height:10px;border-radius:999px;
-  background:var(--fg);
+  width:10px;height:10px;border-radius:999px;background:var(--fg);
   animation: pop .5s ease-out both;
 }
-
-@keyframes pop{
-  from{transform:scale(.6);opacity:0}
-  to{transform:scale(1);opacity:1}
-}
+@keyframes pop{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
 
 .card{
   border:1px solid var(--border);
@@ -53,10 +38,7 @@ body{
   opacity:0;
   animation: enter .35s ease-out forwards;
 }
-
-@keyframes enter{
-  to{transform:translateY(0);opacity:1}
-}
+@keyframes enter{to{transform:translateY(0);opacity:1}}
 
 h2{margin:0 0 8px;font-size:16px;letter-spacing:-.02em}
 
@@ -74,7 +56,6 @@ h2{margin:0 0 8px;font-size:16px;letter-spacing:-.02em}
   color:#000;
   transition: border-color .15s ease, transform .12s ease;
 }
-
 .input:focus{border-color:rgba(0,0,0,.35)}
 .input:active{transform:scale(.99)}
 
@@ -88,7 +69,6 @@ h2{margin:0 0 8px;font-size:16px;letter-spacing:-.02em}
   font-weight:700;
   transition: transform .12s ease, opacity .12s ease, background .12s ease, color .12s ease, border-color .12s ease;
 }
-
 .btn:hover{opacity:.92}
 .btn:active{transform:scale(.98)}
 
@@ -97,7 +77,6 @@ h2{margin:0 0 8px;font-size:16px;letter-spacing:-.02em}
   color:#000;
   border:1px solid var(--border);
 }
-
 .btn.ghost:hover{border-color:rgba(0,0,0,.35)}
 
 .pill{
@@ -114,79 +93,75 @@ h2{margin:0 0 8px;font-size:16px;letter-spacing:-.02em}
 .msg{margin:10px 0 0;font-size:13px;color:var(--muted)}
 .hidden{display:none !important}
 
-.tableWrap{
-  margin-top:14px;
-  overflow:auto;
-  border-radius:14px;
-  border:1px solid var(--border);
+/* ===== Icons ===== */
+.ico{
+  width:18px;height:18px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  flex:0 0 auto;
 }
+.ico svg{width:18px;height:18px;display:block}
 
-.table{
-  width:100%;
-  border-collapse:collapse;
-  min-width:760px;
-  background:#fff;
+/* ===== Truncation (prevents cards resizing due to long text) ===== */
+.truncate{
+  overflow:hidden;
+  white-space:nowrap;
+  text-overflow:ellipsis;
 }
-
-.table th,.table td{
-  padding:12px 10px;
-  text-align:left;
-  vertical-align:top;
+.fileName{
+  font-weight:800;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  min-width:0;        /* important so ellipsis works in flex */
 }
-
-.table thead th{
+.fileNameText{
+  min-width:0;
+  max-width:100%;
+}
+.filePath{
   font-size:12px;
   color:var(--muted);
+  margin-top:4px;
+  max-width:100%;
+}
+
+/* Desktop table */
+.tableWrap{margin-top:14px;overflow:auto;border-radius:14px;border:1px solid var(--border)}
+.table{width:100%;border-collapse:collapse;min-width:760px;background:#fff}
+.table th,.table td{padding:12px 10px;text-align:left;vertical-align:top}
+.table thead th{
+  font-size:12px;color:var(--muted);
   border-bottom:1px solid var(--border);
   position:sticky;top:0;background:#fff;
 }
+.table tbody tr{border-top:1px solid var(--border);animation: rowIn .28s ease-out both}
+@keyframes rowIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 
-.table tbody tr{
-  border-top:1px solid var(--border);
-  animation: rowIn .28s ease-out both;
-}
+/* keep first column from blowing up width */
+.table td:first-child{max-width:420px}
+.table td:first-child .truncate{max-width:420px}
 
-@keyframes rowIn{
-  from{opacity:0;transform:translateY(6px)}
-  to{opacity:1;transform:translateY(0)}
-}
-
-.fileName{font-weight:800}
-.filePath{font-size:12px;color:var(--muted);margin-top:4px}
-
+/* Actions */
 .actions{display:flex;gap:8px;flex-wrap:wrap}
 .actions .btn{padding:8px 10px;border-radius:12px;font-size:13px}
 
+/* Toast */
 .toast{
-  margin-top:12px;
-  border:1px solid var(--border);
-  border-radius:14px;
-  padding:10px 12px;
-  font-size:13px;
-  transform: translateY(8px);
-  opacity:0;
-  animation: toastIn .22s ease-out forwards;
+  margin-top:12px;border:1px solid var(--border);border-radius:14px;padding:10px 12px;
+  font-size:13px;transform: translateY(8px);opacity:0;animation: toastIn .22s ease-out forwards;
 }
+@keyframes toastIn{to{transform:translateY(0);opacity:1}}
 
-@keyframes toastIn{
-  to{transform:translateY(0);opacity:1}
-}
+.footer{margin-top:16px;padding:10px 2px}
 
-.footer{
-  margin-top:16px;
-  padding:10px 2px;
-}
-
-/* ===== Mobile: turn table into cards ===== */
+/* ===== Mobile: cards ===== */
 @media (max-width: 760px) {
   .container{padding:16px}
   .input{min-width: 100%}
 
-  .tableWrap{
-    border:none;
-    overflow:visible;
-  }
-
+  .tableWrap{border:none;overflow:visible}
   .table, thead { display:none; }
 
   #tbody{
@@ -211,7 +186,6 @@ h2{margin:0 0 8px;font-size:16px;letter-spacing:-.02em}
     margin-top:10px;
   }
 
-  .fileMeta .pill{font-size:12px}
   .actions{margin-top:10px}
   .actions .btn{flex:1; min-width:140px}
 }
