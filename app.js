@@ -11,6 +11,7 @@ const loginMsg = $("loginMsg");
 const logoutBtn = $("logoutBtn");
 const refreshBtn = $("refreshBtn");
 const tbody = $("tbody");
+const cards = $("cards");              // NEW
 const search = $("search");
 const count = $("count");
 const toast = $("toast");
@@ -22,7 +23,7 @@ const currentFolderPill = $("currentFolderPill");
 let allItems = [];
 let currentFolder = "";
 
-// ---------- Icons (ONLY for item names) ----------
+// Icons ONLY for item names
 const ICONS = {
   file: `
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -34,19 +35,16 @@ const ICONS = {
       <path d="M3 7a2 2 0 0 1 2-2h5l2 2h9a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
     </svg>`
 };
-
 function iconHTML(key) {
   return `<span class="ico" aria-hidden="true">${ICONS[key] || ""}</span>`;
 }
 
-// ---------- UI helpers ----------
 function showToast(text) {
   toast.textContent = text;
   toast.classList.remove("hidden");
   toast.style.animation = "none";
   toast.offsetHeight;
   toast.style.animation = "";
-
   clearTimeout(showToast._t);
   showToast._t = setTimeout(() => toast.classList.add("hidden"), 2400);
 }
@@ -55,34 +53,27 @@ function setAuthed(v) {
   localStorage.setItem(LOGIN_KEY, v ? "1" : "0");
   renderViews();
 }
-
 function isAuthed() {
   return localStorage.getItem(LOGIN_KEY) === "1";
 }
 
-// ---------- Path helpers ----------
 function cleanPath(p) {
   return String(p || "").replace(/^\/+/, "");
 }
-
 function normalizeFolderPath(p) {
   const cp = cleanPath(p);
   if (!cp) return "";
   return cp.endsWith("/") ? cp : (cp + "/");
 }
-
 function isFolderItem(item) {
   return item.kind === "folder" || /\/$/.test(cleanPath(item.path));
 }
-
 function displayCdnPath(path) {
   return `/cdn/${cleanPath(path)}`;
 }
-
 function cdnUrlFor(path) {
   return `${location.origin}/cdn/${cleanPath(path)}`;
 }
-
 function downloadPageFor(file) {
   const filePath = cleanPath(file.path);
   const name = file.name || filePath.split("/").pop() || "";
@@ -97,7 +88,7 @@ function downloadPageFor(file) {
   );
 }
 
-// ---------- Folder stats (size + updated) ----------
+// Folder stats
 function parseSizeToBytes(sizeStr) {
   if (!sizeStr) return 0;
   const s = String(sizeStr).trim().toUpperCase();
@@ -109,7 +100,6 @@ function parseSizeToBytes(sizeStr) {
   const mult = { B:1, KB:1024, MB:1024**2, GB:1024**3, TB:1024**4 }[unit] || 1;
   return Math.round(n * mult);
 }
-
 function bytesToNice(bytes) {
   const b = Number(bytes || 0);
   if (b < 1024) return `${b} B`;
@@ -120,19 +110,16 @@ function bytesToNice(bytes) {
   const gb = mb / 1024;
   return `${gb.toFixed(1).replace(/\.0$/, "")} GB`;
 }
-
 function parseUpdatedToMs(updatedStr) {
   if (!updatedStr) return 0;
   const d = new Date(updatedStr);
   const ms = d.getTime();
   return isFinite(ms) ? ms : 0;
 }
-
 function formatUpdated(ms) {
   if (!ms) return "—";
   return new Date(ms).toLocaleString(undefined, { year:"numeric", month:"short", day:"2-digit" });
 }
-
 function buildFolderStats(items) {
   const files = items
     .filter(x => !isFolderItem(x))
@@ -142,14 +129,12 @@ function buildFolderStats(items) {
       updatedMs: parseUpdatedToMs(x.updated)
     }));
 
-  const folderPaths = items
-    .filter(x => isFolderItem(x))
-    .map(x => normalizeFolderPath(x.path));
+  const folderPaths = [...new Set(
+    items.filter(x => isFolderItem(x)).map(x => normalizeFolderPath(x.path))
+  )];
 
-  const uniqFolders = [...new Set(folderPaths)];
   const stats = {};
-
-  for (const folder of uniqFolders) {
+  for (const folder of folderPaths) {
     let bytes = 0;
     let latest = 0;
     for (const f of files) {
@@ -160,17 +145,13 @@ function buildFolderStats(items) {
     }
     stats[folder] = { bytes, latest };
   }
-
   return stats;
 }
-
 let folderStats = {};
 
-// ---------- Folder navigation ----------
 function updateFolderPill() {
   currentFolderPill.textContent = `Folder: /${currentFolder}`;
 }
-
 function goUpFolder() {
   if (!currentFolder) return;
   const parts = currentFolder.split("/").filter(Boolean);
@@ -179,7 +160,6 @@ function goUpFolder() {
   updateFolderPill();
   renderList();
 }
-
 function openFolder(folderPath) {
   currentFolder = normalizeFolderPath(folderPath);
   updateFolderPill();
@@ -190,10 +170,8 @@ function isDirectChildOfCurrent(itemPath, isFolder) {
   const p = cleanPath(itemPath);
   const folder = currentFolder;
   if (!p.startsWith(folder)) return false;
-
   const rest = p.slice(folder.length);
   if (!rest) return false;
-
   const restNoTrailing = isFolder ? rest.replace(/\/$/, "") : rest;
   return !restNoTrailing.includes("/");
 }
@@ -203,7 +181,6 @@ function matchesSearch(item, q) {
   const hay = `${item.name || ""} ${item.path || ""} ${item.type || ""}`.toLowerCase();
   return hay.includes(q);
 }
-
 function sortName(a, b) {
   return (a.name || "").localeCompare(b.name || "");
 }
@@ -218,7 +195,6 @@ async function loadItems() {
   const j = await r.json();
   const items = Array.isArray(j.items) ? j.items : (Array.isArray(j.files) ? j.files : []);
   allItems = items;
-
   folderStats = buildFolderStats(allItems);
   renderList();
   showToast("Refreshed.");
@@ -253,18 +229,23 @@ function renderList() {
     if (mode === "folders" && !folder) continue;
     if (!matchesSearch(item, q)) continue;
 
-    const normalizedItem = { ...item, path };
-    if (folder) folders.push(normalizedItem);
-    else files.push(normalizedItem);
+    const normalized = { ...item, path };
+    if (folder) folders.push(normalized);
+    else files.push(normalized);
   }
 
   files.sort(sortName);
   folders.sort(sortName);
 
+  // Clear both outputs
   tbody.innerHTML = "";
+  cards.innerHTML = "";
 
-  // ---------- Mobile cards ----------
+  // Toggle containers
+  cards.classList.toggle("hidden", !isMobile);
+
   if (isMobile) {
+    // Render files as cards
     for (const f of files) {
       const cdn = cdnUrlFor(f.path);
       const dl = downloadPageFor(f);
@@ -272,7 +253,6 @@ function renderList() {
 
       const card = document.createElement("div");
       card.className = "fileCard";
-
       card.innerHTML = `
         <div class="fileName">
           ${iconHTML("file")}
@@ -298,9 +278,10 @@ function renderList() {
       btns[1].onclick = () => window.open(cdn, "_blank", "noopener,noreferrer");
       btns[2].onclick = () => window.open(dl, "_blank", "noopener,noreferrer");
 
-      tbody.appendChild(card);
+      cards.appendChild(card);
     }
 
+    // Render folders at bottom
     for (const f of folders) {
       const folderPath = normalizeFolderPath(f.path);
       const stat = folderStats[folderPath] || { bytes: 0, latest: 0 };
@@ -311,7 +292,6 @@ function renderList() {
 
       const card = document.createElement("div");
       card.className = "fileCard";
-
       card.innerHTML = `
         <div class="fileName">
           ${iconHTML("folder")}
@@ -331,14 +311,14 @@ function renderList() {
       `;
 
       card.querySelector("button").onclick = () => openFolder(folderPath);
-      tbody.appendChild(card);
+      cards.appendChild(card);
     }
 
     count.textContent = `${files.length} file(s), ${folders.length} folder(s)`;
     return;
   }
 
-  // ---------- Desktop table ----------
+  // Desktop table rendering
   for (const f of files) {
     const cdn = cdnUrlFor(f.path);
     const dl = downloadPageFor(f);
@@ -399,7 +379,6 @@ function renderList() {
         </div>
       </td>
     `;
-
     tr.querySelector("button").onclick = () => openFolder(folderPath);
     tbody.appendChild(tr);
   }
@@ -407,7 +386,7 @@ function renderList() {
   count.textContent = `${files.length} file(s), ${folders.length} folder(s)`;
 }
 
-// ---------- Events ----------
+// Events
 loginForm.addEventListener("submit", (e) => {
   e.preventDefault();
   loginMsg.textContent = "";
@@ -421,12 +400,12 @@ logoutBtn.addEventListener("click", () => setAuthed(false));
 refreshBtn.addEventListener("click", loadItems);
 search.addEventListener("input", renderList);
 kindFilter.addEventListener("change", renderList);
-upFolderBtn.addEventListener("click", () => {
-  goUpFolder();
-  showToast("Moved up a folder.");
-});
-window.addEventListener("resize", renderList);
+upFolderBtn.addEventListener("click", () => { goUpFolder(); showToast("Moved up a folder."); });
 
-// boot
+// Re-render on resize/orientation changes
+window.addEventListener("resize", renderList);
+window.addEventListener("orientationchange", renderList);
+
+// Boot
 updateFolderPill();
 renderViews();
