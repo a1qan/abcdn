@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Downloading… | ABCDN</title>
+  <style>
+    :root{
+      --bg:#fff; --fg:#000; --muted:rgba(0,0,0,.65);
+      --border:rgba(0,0,0,.18); --shadow:0 12px 40px rgba(0,0,0,.06);
+      --r:16px;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial}
+    .wrap{max-width:860px;margin:0 auto;padding:24px}
+    .card{
+      border:1px solid var(--border); border-radius:var(--r); padding:18px;
+      box-shadow:var(--shadow); transform:translateY(6px); opacity:0; animation:enter .35s ease-out forwards;
+    }
+    @keyframes enter{to{transform:translateY(0);opacity:1}}
+    h1{margin:0 0 6px;font-size:18px;letter-spacing:-.02em}
+    .muted{color:var(--muted);font-size:13px;margin:0}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+    .kv{border:1px solid var(--border);border-radius:14px;padding:12px}
+    .k{font-size:12px;color:var(--muted)}
+    .v{font-size:14px;font-weight:700;margin-top:4px;word-break:break-all}
+    .bar{height:2px;border-radius:999px;background:rgba(0,0,0,.12);overflow:hidden;margin-top:14px}
+    .bar > div{height:100%;width:35%;background:#000;border-radius:999px;animation:load 1.05s ease-in-out infinite}
+    @keyframes load{0%{transform:translateX(-120%)}50%{transform:translateX(160%)}100%{transform:translateX(420%)}}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:14px}
+    .btn{
+      padding:11px 14px;border-radius:14px;border:1px solid #000;background:#000;color:#fff;
+      font-weight:800;cursor:pointer;transition:transform .12s ease,opacity .12s ease;
+    }
+    .btn:hover{opacity:.92}
+    .btn:active{transform:scale(.98)}
+    .btn.ghost{background:#fff;color:#000;border:1px solid var(--border)}
+    .toast{
+      margin-top:12px;border:1px solid var(--border);border-radius:14px;padding:10px 12px;
+      font-size:13px;display:none
+    }
+    @media (max-width:760px){
+      .grid{grid-template-columns:1fr}
+      .wrap{padding:16px}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1 id="title">Downloading…</h1>
+      <p class="muted" id="subtitle">Preparing your file.</p>
+
+      <div class="bar"><div></div></div>
+
+      <div class="grid" style="margin-top:14px;">
+        <div class="kv">
+          <div class="k">File</div>
+          <div class="v" id="fileName">—</div>
+        </div>
+        <div class="kv">
+          <div class="k">Type</div>
+          <div class="v" id="fileType">—</div>
+        </div>
+        <div class="kv">
+          <div class="k">Size</div>
+          <div class="v" id="fileSize">—</div>
+        </div>
+        <div class="kv">
+          <div class="k">CDN URL</div>
+          <div class="v" id="cdnUrl">—</div>
+        </div>
+      </div>
+
+      <div class="row">
+        <button class="btn" id="startBtn">Start download</button>
+        <button class="btn ghost" id="backBtn">Go back</button>
+      </div>
+
+      <div class="toast" id="toast"></div>
+    </div>
+  </div>
+
+  <script>
+    // download.html?file=images/banner.jpg
+    // optional: &name=Banner.jpg&type=image/jpeg&size=310%20KB
+    function qs(key){
+      return new URLSearchParams(location.search).get(key) || "";
+    }
+
+    const file = qs("file").replace(/^\/+/, ""); // sanitize leading slash
+    const name = qs("name") || (file ? file.split("/").pop() : "");
+    const type = qs("type") || "—";
+    const size = qs("size") || "—";
+    const cdn = file ? `${location.origin}/cdn/${file}` : "";
+
+    const $ = (id) => document.getElementById(id);
+    const title = $("title");
+    const subtitle = $("subtitle");
+    const toast = $("toast");
+
+    $("fileName").textContent = name || "—";
+    $("fileType").textContent = type;
+    $("fileSize").textContent = size;
+    $("cdnUrl").textContent = cdn || "—";
+
+    function showToast(text){
+      toast.style.display = "block";
+      toast.textContent = text;
+    }
+
+    function triggerDownload(){
+      if (!cdn){
+        title.textContent = "Missing file";
+        subtitle.textContent = "No file was provided in the URL.";
+        showToast("Use download.html?file=path/to/file.ext");
+        return;
+      }
+
+      // Create an invisible <a download> for best chance of download
+      const a = document.createElement("a");
+      a.href = cdn;
+      a.download = name || "";
+      a.rel = "noopener";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+
+      title.textContent = "Thanks for downloading";
+      subtitle.textContent = "If it didn’t start automatically, press “Start download”.";
+      showToast("Download should be starting now.");
+    }
+
+    // Random 1–3 seconds delay (1000–3000ms)
+    const delay = Math.floor(1000 + Math.random() * 2000);
+
+    // Auto-start after delay
+    setTimeout(() => {
+      subtitle.textContent = `Starting download…`;
+      triggerDownload();
+    }, delay);
+
+    // Manual button
+    $("startBtn").addEventListener("click", triggerDownload);
+
+    // Go back: try close tab, else go back, else go home
+    $("backBtn").addEventListener("click", () => {
+      // If opened by script, window.close works; otherwise fallback
+      window.close();
+      setTimeout(() => {
+        if (history.length > 1) history.back();
+        else location.href = "/";
+      }, 50);
+    });
+  </script>
+</body>
+</html>
