@@ -1,7 +1,5 @@
 {
   "files": [
-    { "name": "test.jpg", "path": "/test.jpg", "type": "image/jpg", "size": "115 KB", "updated": "2026-01-27" },
-
     { "name": "Music", "path": "Music/", "kind": "folder" },
     { "name": "American Wedding.mp3", "path": "Music/American Wedding.mp3", "type": "audio/mp3", "size": "7.7 MB", "updated": "2026-01-27" },
 
@@ -17,6 +15,9 @@
     { "name": "Dune Sony.cube", "path": "LUTs/Dune Sony.cube", "type": "LUT/cube", "size": "133 KB", "updated": "2026-01-27" },
     { "name": "Halloween -0 Sony.cube", "path": "LUTs/Halloween -0 Sony.cube", "type": "LUT/cube", "size": "978 KB", "updated": "2026-01-27" },
     { "name": "Halloween -2 Sony.cube", "path": "LUTs/Halloween -2 Sony.cube", "type": "LUT/cube", "size": "985 KB", "updated": "2026-01-27" },
-    { "name": "Winterfell Sony.cube", "path": "LUTs/Winterfell Sony.cube", "type": "LUT/cube", "size": "1.2 MB", "updated": "2026-01-27" }
+    { "name": "Winterfell Sony.cube", "path": "LUTs/Winterfell Sony.cube", "type": "LUT/cube", "size": "1.2 MB", "updated": "2026-01-27" },
+
+    { "name": "DJI Footage", "path": "DJI Footage/", "kind": "folder" },
+    { "name": "25.01.26", "path": "DJI Footage/25.01.26/", "kind": "folder" },
   ]
 }
