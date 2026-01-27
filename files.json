@@ -3,6 +3,12 @@
     { "name": "test.jpg", "path": "/test.jpg", "type": "image/jpg", "size": "115 KB", "updated": "2026-01-27" },
 
     { "name": "Music", "path": "Music/", "kind": "folder" },
-    { "name": "American Wedding.mp3", "path": "Music/American Wedding.mp3", "type": "audio/mp3", "size": "7.7 MB", "updated": "2026-01-27" }
+    { "name": "American Wedding.mp3", "path": "Music/American Wedding.mp3", "type": "audio/mp3", "size": "7.7 MB", "updated": "2026-01-27" },
+
+    { "name": "LUTs", "path": "LUTs/", "kind": "folder" },
+    { "name": "Blue Look.cube", "path": "LUTs/Blue Look.cube", "type": "LUT/cube", "size": "115 KB", "updated": "2026-01-27" },
+    { "name": "D-Log M to Rec.709 V1.cube", "path": "LUTs/D-Log M to Rec.709 V1.cube", "type": "LUT/cube", "size": "1 MB", "updated": "2026-01-27" },
+    { "name": "Last Day.cube", "path": "LUTs/Last Day.cube", "type": "LUT/cube", "size": "554 KB", "updated": "2026-01-27" },
+    { "name": "Purple Sunset.cube", "path": "LUTs/Purple Sunset.cube", "type": "LUT/cube", "size": "935 KB", "updated": "2026-01-27" }
   ]
 }
