@@ -1,13 +1,9 @@
-// ========= SIMPLE CLIENT TEMPLATE (static) =========
-// Client-side login + localStorage mapping slug -> url
-// Requested behavior: after creating /cdn link, Copy URL copies the CDN link.
-
 const LOGIN_KEY = "cdn_authed";
 const LINKS_KEY = "cdn_links";     // { slug: url }
 const FILE_SLUG_KEY = "cdn_file_slugs"; // { filePathOrName: slug }
 
-const DEFAULT_EMAIL = "a@b.com";
-const DEFAULT_PASS = "p123";
+const DEFAULT_EMAIL = "user@abcdn.vercel.app";
+const DEFAULT_PASS = "Aidan123";
 
 const $ = (id) => document.getElementById(id);
 
@@ -28,9 +24,7 @@ let allFiles = [];
 function showToast(text) {
   toast.textContent = text;
   toast.classList.remove("hidden");
-  // restart animation
   toast.style.animation = "none";
-  // eslint-disable-next-line no-unused-expressions
   toast.offsetHeight;
   toast.style.animation = "";
 
@@ -68,7 +62,6 @@ function makeSlug() {
 }
 
 function resolveUrl(filePath) {
-  // If absolute already, return it.
   try {
     const u = new URL(filePath);
     return u.toString();
@@ -82,7 +75,6 @@ function resolveUrl(filePath) {
 }
 
 function getCdnBase() {
-  // Works whether hosted as /index.html or just /
   const basePath = location.pathname.replace(/\/index\.html?$/, "/");
   return `${location.origin}${basePath}cdn.html#`;
 }
@@ -114,7 +106,6 @@ function renderViews() {
 }
 
 function fileKey(f) {
-  // Stable key: prefer path, fallback to name
   return (f.path || f.name || "").trim();
 }
 
@@ -124,11 +115,9 @@ function ensureSlugForFile(f, directUrl) {
   const key = fileKey(f);
   if (!key) return null;
 
-  // existing?
   const existing = fileSlugs[key];
   if (existing && links[existing]) return existing;
 
-  // create new
   let slug = makeSlug();
   while (links[slug]) slug = makeSlug();
 
@@ -226,7 +215,6 @@ function renderTable() {
       return;
     }
 
-    // Desktop table row
     const tr = document.createElement("tr");
 
     const nameTd = document.createElement("td");
@@ -290,7 +278,6 @@ function renderTable() {
   count.textContent = `${filtered.length} file(s)`;
 }
 
-// ===== events =====
 loginForm.addEventListener("submit", (e) => {
   e.preventDefault();
   loginMsg.textContent = "";
@@ -311,5 +298,4 @@ search.addEventListener("input", renderTable);
 baseUrl.addEventListener("input", renderTable);
 window.addEventListener("resize", renderTable);
 
-// ===== boot =====
 renderViews();
